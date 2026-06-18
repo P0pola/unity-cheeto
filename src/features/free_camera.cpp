@@ -17,30 +17,13 @@ void FreeCamera::onDisable() {
 void FreeCamera::onTick() {
     if (!isEnabled()) return;
 
-    auto* assembly = UnityResolve::Get("UnityEngine.CoreModule.dll");
-    if (!assembly) assembly = UnityResolve::Get("UnityEngine.dll");
-    if (!assembly) return;
-
-    auto* cameraClass = assembly->Get("Camera");
-    if (!cameraClass) return;
-
     if (!cameraObj_) {
-        auto* mainGetter = cameraClass->Get<UnityResolve::Method>("get_main");
-        if (!mainGetter) return;
-        cameraObj_ = mainGetter->Invoke<void*>();
+        cameraObj_ = UCamera::get_main();
         if (!cameraObj_) return;
     }
 
-    auto* componentClass = assembly->Get("Component");
-    if (!componentClass) return;
-    auto* getTransform = componentClass->Get<UnityResolve::Method>("get_transform");
-    if (!getTransform) return;
-
-    void* transform = getTransform->Invoke<void*>(cameraObj_);
+    void* transform = UComponent::get_transform(cameraObj_);
     if (!transform) return;
-
-    auto* transformClass = assembly->Get("Transform");
-    if (!transformClass) return;
 
     POINT currentMouse;
     GetCursorPos(&currentMouse);
@@ -54,29 +37,26 @@ void FreeCamera::onTick() {
         pitch_ -= dy * sens * 0.1f;
         pitch_ = std::clamp(pitch_, -89.0f, 89.0f);
 
-        auto* setEuler = transformClass->Get<UnityResolve::Method>("set_localEulerAngles_Injected");
-        if (setEuler) {
-            UnityResolve::UnityType::Vector3 euler{pitch_, yaw_, 0.0f};
-            setEuler->Invoke<void>(transform, &euler);
-        }
+        Vector3 euler{pitch_, yaw_, 0.0f};
+        UTransform::set_localEulerAngles_Injected(transform, &euler);
     }
 
     float yawRad = yaw_ * 3.14159265f / 180.0f;
     float pitchRad = pitch_ * 3.14159265f / 180.0f;
 
-    UnityResolve::UnityType::Vector3 forward{
+    Vector3 forward{
         std::cos(pitchRad) * std::sin(yawRad),
         -std::sin(pitchRad),
         std::cos(pitchRad) * std::cos(yawRad)
     };
-    UnityResolve::UnityType::Vector3 right{
+    Vector3 right{
         std::cos(yawRad),
         0.0f,
         -std::sin(yawRad)
     };
 
     float speed = static_cast<float>(moveSpeed) * 0.016f;
-    UnityResolve::UnityType::Vector3 move{0.0f, 0.0f, 0.0f};
+    Vector3 move{0.0f, 0.0f, 0.0f};
 
     auto key = HotkeyManager::isDown;
     if (key(forwardKey)) { move.x += forward.x * speed; move.y += forward.y * speed; move.z += forward.z * speed; }
@@ -87,16 +67,12 @@ void FreeCamera::onTick() {
     if (key(downKey))    { move.y -= speed; }
 
     if (move.x != 0.0f || move.y != 0.0f || move.z != 0.0f) {
-        auto* getPos = transformClass->Get<UnityResolve::Method>("get_position_Injected");
-        auto* setPos = transformClass->Get<UnityResolve::Method>("set_position_Injected");
-        if (getPos && setPos) {
-            UnityResolve::UnityType::Vector3 pos{};
-            getPos->Invoke<void>(transform, &pos);
-            pos.x += move.x;
-            pos.y += move.y;
-            pos.z += move.z;
-            setPos->Invoke<void>(transform, &pos);
-        }
+        Vector3 pos{};
+        UTransform::get_position_Injected(transform, &pos);
+        pos.x += move.x;
+        pos.y += move.y;
+        pos.z += move.z;
+        UTransform::set_position_Injected(transform, &pos);
     }
 }
 

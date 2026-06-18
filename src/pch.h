@@ -46,4 +46,6 @@
 // Project headers
 #include "core/hotkey/hotkey_manager.h"
 #include "vendor/UnityResolve.hpp"
+#include "core/unity/unity_macros.h"
+#include "core/unity/unity_types.h"
 #include "gui/widgets.h"

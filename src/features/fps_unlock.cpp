@@ -7,35 +7,14 @@ void FPSUnlock::onEnable() {
 
 void FPSUnlock::onDisable() {
     LOG_INFO("FPS Unlock disabled, restoring default");
-    auto* assembly = UnityResolve::Get("UnityEngine.CoreModule.dll");
-    if (!assembly) assembly = UnityResolve::Get("UnityEngine.dll");
-    if (!assembly) return;
-
-    auto* appClass = assembly->Get("Application");
-    if (!appClass) return;
-
-    if (auto* setter = appClass->Get<UnityResolve::Method>("set_targetFrameRate", {"System.Int32"}))
-        setter->Invoke<void>(60);
+    UApplication::set_targetFrameRate(60);
 }
 
 void FPSUnlock::onTick() {
     if (!isEnabled()) return;
 
-    auto* assembly = UnityResolve::Get("UnityEngine.CoreModule.dll");
-    if (!assembly) assembly = UnityResolve::Get("UnityEngine.dll");
-    if (!assembly) return;
-
-    auto* appClass = assembly->Get("Application");
-    if (appClass) {
-        if (auto* setter = appClass->Get<UnityResolve::Method>("set_targetFrameRate", {"System.Int32"}))
-            setter->Invoke<void>(static_cast<int>(targetFPS));
-    }
-
-    auto* qsClass = assembly->Get("QualitySettings");
-    if (qsClass) {
-        if (auto* setter = qsClass->Get<UnityResolve::Method>("set_vSyncCount", {"System.Int32"}))
-            setter->Invoke<void>(0);
-    }
+    UApplication::set_targetFrameRate(static_cast<int>(targetFPS));
+    UQualitySettings::set_vSyncCount(0);
 }
 
 void FPSUnlock::drawUI() {
