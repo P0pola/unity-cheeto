@@ -1,0 +1,12 @@
+/bin/
+/obj/
+*.user
+*.suo
+.vs/
+*.ncb
+*.sdf
+*.opensdf
+*.cachefile
+Debug/
+Release/
+x64/
