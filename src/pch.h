@@ -6,7 +6,7 @@
 #define GFX_API_OPENGL  2
 
 //select your API here
-#define USE_GFX_API GFX_API_OPENGL
+#define USE_GFX_API GFX_API_DX11
 
 #include <Windows.h>
 
@@ -26,6 +26,7 @@
 
 #include <algorithm>
 #include <array>
+#include <atomic>
 #include <chrono>
 #include <cmath>
 #include <cstdint>

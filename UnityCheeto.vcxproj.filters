@@ -33,6 +33,9 @@
     <ClCompile Include="src\dllmain.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\app.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="src\core\hooks\dx12_hook.cpp">
       <Filter>src\core\hooks</Filter>
     </ClCompile>
@@ -97,6 +100,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\pch.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\app.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\core\hooks\dx12_hook.h">

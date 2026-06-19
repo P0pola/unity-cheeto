@@ -84,6 +84,7 @@
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="src\dllmain.cpp" />
+    <ClCompile Include="src\app.cpp" />
     <ClCompile Include="src\core\hooks\dx12_hook.cpp" />
     <ClCompile Include="src\core\hooks\dx11_hook.cpp" />
     <ClCompile Include="src\core\hooks\opengl_hook.cpp" />
@@ -139,6 +140,7 @@
   </ItemGroup>
   <!-- Header files -->
   <ItemGroup>
+    <ClInclude Include="src\app.h" />
     <ClInclude Include="src\core\unity\unity_macros.h" />
     <ClInclude Include="src\core\unity\unity_types.h" />
     <ClInclude Include="src\features\world_speed.h" />

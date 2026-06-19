@@ -11,6 +11,7 @@ public:
     void drawUI() override;
 
     const char* name() const override { return "Free Camera"; }
+    const char* category() const override { return "World"; }
 
     ConfigVar<float> moveSpeed{"freecam.speed", 10.0f};
     ConfigVar<float> sensitivity{"freecam.sensitivity", 2.0f};

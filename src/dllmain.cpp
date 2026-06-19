@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "app.h"
 
 #if USE_GFX_API == GFX_API_OPENGL
 #include "core/hooks/opengl_hook.h"
@@ -12,109 +13,28 @@
 #include "renderer/dx11_renderer.h"
 #endif
 
-#include "gui/gui_manager.h"
-#include "gui/icons.h"
-#include "gui/widgets.h"
-#include "features/fps_unlock.h"
-#include "features/free_camera.h"
-#include "features/world_speed.h"
-
 static HMODULE g_hModule = nullptr;
 static std::atomic<bool> g_running = true;
 
-static ConfigVar<int> g_toggleKey{"menu.toggleKey", VK_INSERT};
-
-void initializeFeatures() {
-    Translator::GetInstance().initConfig();
-
-    FPSUnlock::Get().init();
-    FreeCamera::Get().init();
-    WorldSpeed::Get().init();
-
-    auto& gui = GuiManager::Get();
-
-    gui.addTab(ICON_RI_PLAYER, "Player", [] {
-        ImGui::TextDisabled("No player features yet");
-    });
-
-    gui.addTab(ICON_RI_WORLD, "World", [] {
-        FreeCamera::Get().drawUI();
-        WorldSpeed::Get().drawUI();
-    });
-
-    gui.addTab(ICON_RI_VISUAL, "Visual", [] {
-        FPSUnlock::Get().drawUI();
-    });
-
-    gui.addTab(ICON_RI_MISC, "Misc", [] {
-
-    });
-
-    gui.addTab(ICON_RI_SETTINGS, "Setting", [] {
-        ImGui::SeparatorText("Menu");
-        static int toggleKeyVal = static_cast<int>(g_toggleKey);
-        if (Widgets::KeyBind("Toggle Key", &toggleKeyVal)) {
-            g_toggleKey = toggleKeyVal;
-        }
-
-        ImGui::Spacing();
-        ImGui::SeparatorText("Language");
-        Translator::GetInstance().renderLanguageSelector();
-
-        ImGui::Spacing();
-        ImGui::SeparatorText("Config");
-        if (ImGui::Button("Save"))
-            ConfigManager::Instance().Save();
-        ImGui::SameLine();
-        if (ImGui::Button("Reset")) {
-            ConfigManager::Instance().GetJson().clear();
-            ConfigManager::Instance().Save();
-        }
-    });
-
-    gui.addTab(ICON_RI_BUG, "Debug", [] {
-        ImGui::Text("Build: " __DATE__ " " __TIME__);
-        ImGui::Separator();
-
-        static int testKey = VK_F1;
-        Widgets::KeyBind("Test Hotkey", &testKey);
-
-        if (ImGui::Button("Clear Log"))
-            Logger_::clear();
-    });
-}
-
-static void tickToggleKey() {
-    static bool wasDown = false;
-    bool down = (GetAsyncKeyState(static_cast<int>(g_toggleKey)) & 0x8000) != 0;
-    if (!down && wasDown)
-        GuiManager::Get().toggle();
-    wasDown = down;
-}
+// ============================================================================
+// Hook callbacks
+// ============================================================================
 
 #if USE_GFX_API == GFX_API_OPENGL
 
-void onSwapBuffers(HDC hdc) {
-    tickToggleKey();
-
+static void onSwapBuffers(HDC hdc) {
     auto& renderer = OpenGLRenderer::Get();
     if (!renderer.isReady()) {
         renderer.initialize(hdc);
         return;
     }
-
-    HotkeyManager::Get().tick();
-    FPSUnlock::Get().onTick();
-    FreeCamera::Get().onTick();
-    WorldSpeed::Get().onTick();
+    App::tick();
     renderer.render();
 }
 
-#else // DX11 / DX12
+#else
 
-void onPresent(IDXGISwapChain* swapChain, UINT, UINT) {
-    tickToggleKey();
-
+static void onPresent(IDXGISwapChain* swapChain, UINT, UINT) {
 #if USE_GFX_API == GFX_API_DX12
     auto& renderer = DX12Renderer::Get();
     if (!renderer.isReady()) {
@@ -135,15 +55,11 @@ void onPresent(IDXGISwapChain* swapChain, UINT, UINT) {
         return;
     }
 #endif
-
-    HotkeyManager::Get().tick();
-    FPSUnlock::Get().onTick();
-    FreeCamera::Get().onTick();
-    WorldSpeed::Get().onTick();
+    App::tick();
     renderer.render();
 }
 
-void onResize(IDXGISwapChain*, UINT, UINT, UINT, DXGI_FORMAT, UINT) {
+static void onResize(IDXGISwapChain*, UINT, UINT, UINT, DXGI_FORMAT, UINT) {
 #if USE_GFX_API == GFX_API_DX12
     DX12Renderer::Get().invalidate();
 #else
@@ -151,9 +67,13 @@ void onResize(IDXGISwapChain*, UINT, UINT, UINT, DXGI_FORMAT, UINT) {
 #endif
 }
 
-#endif // USE_GFX_API == GFX_API_OPENGL
+#endif
 
-DWORD WINAPI mainThread(LPVOID) {
+// ============================================================================
+// Main thread
+// ============================================================================
+
+static DWORD WINAPI mainThread(LPVOID) {
     Logger_::attach().showTimeStamp();
     LOG_INFO("UnityCheeto loaded");
 
@@ -174,12 +94,11 @@ DWORD WINAPI mainThread(LPVOID) {
     UnityResolve::ThreadAttach();
     LOG_INFO("UnityResolve initialized ({})", isMono ? "Mono" : "Il2Cpp");
 
-    initializeFeatures();
+    App::initialize();
 
 #if USE_GFX_API == GFX_API_OPENGL
     auto& hook = OpenGLHook::Get();
     hook.onSwapBuffers(onSwapBuffers);
-
     if (!hook.initialize()) {
         LOG_ERROR("Failed to initialize OpenGL hooks");
         return 1;
@@ -188,7 +107,6 @@ DWORD WINAPI mainThread(LPVOID) {
     auto& hook = DXGIHook::Get();
     hook.onPresent(onPresent);
     hook.onResize(onResize);
-
     if (!hook.initialize()) {
         LOG_ERROR("Failed to initialize DXGI hooks");
         return 1;
@@ -213,7 +131,6 @@ DWORD WINAPI mainThread(LPVOID) {
 #endif
 
     Logger_::detach();
-
     return 0;
 }
 

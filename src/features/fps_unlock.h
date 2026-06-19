@@ -11,6 +11,7 @@ public:
     void drawUI() override;
 
     const char* name() const override { return "FPS Unlock"; }
+    const char* category() const override { return "Visual"; }
 
     ConfigVar<int> targetFPS{"fps_unlock.target", 999};
 
