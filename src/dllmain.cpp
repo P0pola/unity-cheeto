@@ -26,6 +26,11 @@ static ConfigVar<int> g_toggleKey{"menu.toggleKey", VK_INSERT};
 
 void initializeFeatures() {
     Translator::GetInstance().initConfig();
+
+    FPSUnlock::Get().init();
+    FreeCamera::Get().init();
+    WorldSpeed::Get().init();
+
     auto& gui = GuiManager::Get();
 
     gui.addTab(ICON_RI_PLAYER, "Player", [] {

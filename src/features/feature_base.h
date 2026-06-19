@@ -4,6 +4,7 @@
 class FeatureBase {
 public:
     virtual ~FeatureBase() = default;
+    virtual void init() {}
     virtual void onEnable() {}
     virtual void onDisable() {}
     virtual void onTick() {}
