@@ -10,6 +10,13 @@
 #include <imgui_impl_win32.h>
 #include <imgui_impl_opengl3.h>
 
+#include <GL/gl.h>
+#pragma comment(lib, "opengl32.lib")
+
+#ifndef GL_FRAMEBUFFER_SRGB
+#define GL_FRAMEBUFFER_SRGB 0x8DB9
+#endif
+
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 bool OpenGLRenderer::initialize(HDC hdc) {
@@ -58,6 +65,12 @@ bool OpenGLRenderer::initialize(HDC hdc) {
 void OpenGLRenderer::render() {
     if (!initialized_) return;
 
+    // Disable sRGB to prevent double gamma correction on ImGui output
+    GLboolean srgbWasEnabled = false;
+    glGetBooleanv(GL_FRAMEBUFFER_SRGB, &srgbWasEnabled);
+    if (srgbWasEnabled)
+        glDisable(GL_FRAMEBUFFER_SRGB);
+
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplWin32_NewFrame();
     ImGui::NewFrame();
@@ -67,6 +80,9 @@ void OpenGLRenderer::render() {
     ImGui::EndFrame();
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+    if (srgbWasEnabled)
+        glEnable(GL_FRAMEBUFFER_SRGB);
 }
 
 void OpenGLRenderer::shutdown() {
