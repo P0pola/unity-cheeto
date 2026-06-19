@@ -1,85 +1,175 @@
 # CLAUDE.md
 
-本文件用于在此代码仓库中协助 Claude Code（claude.ai/code）开展工作，提供构建与代码结构方面的指引。
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## 构建
 
-使用 Visual Studio 2026（v145 工具集）打开 `UnityCheeto.sln`。解决方案包含两个项目：
+使用 Visual Studio 2022/2026（v145 工具集）打开 `UnityCheeto.sln`。解决方案包含两个项目：
 
-- **UnityCheeto** — 输出 DLL（`bin/<Config>/UnityCheeto.dll`）。需要预编译头 `pch.h`。
-- **Injector** — 控制台 EXE（`bin/Injector.exe`）。手动映射注入器，无外部依赖。
+- **UnityCheeto** — DLL 输出到 `bin/<Config>/UnityCheeto.dll`，需要预编译头 `pch.h`
+- **Injector** — 控制台 EXE 输出到 `bin/Injector.exe`，手动映射注入器
 
-二者均仅支持 x64。DLL 链接 d3d12.lib、dxgi.lib、d3dcompiler.lib。注入器使用纯 Win32 API。
+仅支持 x64。关键编译选项：`/std:c++latest`、`/Zc:preprocessor`（`__VA_OPT__` 依赖）、`/utf-8`。
 
+DLL 链接库：dxgi.lib、d3dcompiler.lib、opengl32.lib。
 
+### 图形 API 切换
 
-关键编译器选项：`/std:c++latest`、`/Zc:preprocessor`（unity_macros.h 中的 `__VA_OPT__` 需要此选项）、`/utf-8`。
+在 `src/pch.h` 第 9 行修改宏：
+```cpp
+#define USE_GFX_API GFX_API_DX11   // GFX_API_DX11 | GFX_API_DX12 | GFX_API_OPENGL
+```
 
 ## 架构
 
-这是一个通过手动映射注入的 Unity 游戏 Mod DLL。整体流程如下：
+注入式 Unity 游戏 Mod DLL。执行流程：
 
-1. **Injector**（`injector/`）轮询目标进程 → 手动映射 DLL（解析 PE、重定位、导入表、shellcode 调用 DllMain）
-2. **DllMain**（`src/dllmain.cpp`）创建主线程 → 等待游戏模块（GameAssembly.dll 或 mono-2.0-bdwgc.dll）→ 初始化 UnityResolve → Hook DX12 → 注册功能模块
-3. **DX12Hook**（`src/core/hooks/`）通过创建虚拟设备并抓取 VTable 来 Hook Present/ResizeBuffers/ExecuteCommandLists
-4. **Renderer**（`src/renderer/`）管理 D3D12 资源与 ImGui 后端；`onPresent` 回调驱动每帧 tick 循环
-5. **Features**（`src/features/`）每帧执行 tick 并绘制 UI
+1. **Injector** 读取 `injector.ini` 中的 ExePath → 启动游戏进程 → 手动映射 DLL
+2. **DllMain** → 主线程等待 GameAssembly.dll/mono-2.0-bdwgc.dll → UnityResolve 初始化
+3. **App::initialize()** → `FeatureBase::initAll()` 自动初始化所有已注册 feature → 注册 GUI tabs
+4. **Hook 回调**（onPresent/onSwapBuffers）驱动每帧：`App::tick()` → `FeatureBase::tickAll()` → Renderer::render()
 
-## 关键模式
+### 模块结构
 
-### Unity 绑定（src/core/unity/）
+- `src/dllmain.cpp` — DLL 入口 + hook 回调（薄层）
+- `src/app.h/cpp` — 应用层：feature 注册触发、GUI tabs、toggle key
+- `src/features/` — 功能模块，自动注册
+- `src/core/hooks/` — DX11/DX12/OpenGL hook
+- `src/core/unity/` — Unity 绑定宏和类型声明
+- `src/renderer/` — DX11/DX12/OpenGL 渲染器（ImGui 后端）
+- `src/gui/` — GuiManager（tab 系统）+ Widgets（自定义控件）
+- `vendor/` — UnityResolve、safetyhook、ConfigManager、Logger、Language
 
-在 `unity_types.h` 中使用宏声明 Unity 类：
+## Feature 自动注册系统
+
+继承 `FeatureBase`，实现必要虚函数，singleton 构造时自动注册到全局 registry：
+
+```cpp
+// my_feature.h
+class MyFeature : public FeatureBase {
+public:
+    static MyFeature& Get() { static MyFeature inst; return inst; }
+
+    void init() override;       // hook 安装等一次性初始化
+    void onEnable() override;   // toggle 开启时调用
+    void onDisable() override;  // toggle 关闭时调用
+    void onTick() override;     // 每帧调用
+    void drawUI() override;     // ImGui 绘制
+
+    const char* name() const override { return "My Feature"; }
+    const char* category() const override { return "World"; } // 决定显示在哪个 tab
+
+    ConfigVar<float> someVal{"myfeature.value", 1.0f};
+
+private:
+    MyFeature() : FeatureBase("myfeature") {}
+};
+```
+
+```cpp
+// my_feature.cpp — 底部触发注册
+static auto& _reg = MyFeature::Get();
+```
+
+在 `src/app.cpp` 顶部也需加一行 `static auto& _xxx = MyFeature::Get();` 确保链接。
+
+category 可选值对应 GUI tabs：`"Player"`、`"World"`、`"Visual"`、`"Misc"`。
+
+## Unity 绑定（unity_types.h + unity_macros.h）
+
+### 声明 Unity 类
+
+```cpp
+class UTime {
+    UCLASS("UnityEngine.CoreModule.dll", "Time")
+    UMETHOD(float, get_deltaTime)
+    UMETHOD(void, set_timeScale, float)
+};
+```
+
+`UCLASS(dll名, 类名)` 通过 UnityResolve 解析出 Class 指针。
+
+### UMETHOD — 声明方法
+
+```cpp
+UMETHOD(返回类型, 方法名, 参数类型...)
+```
+
+自动生成四个接口：
+- `UTime::set_timeScale(1.0f)` — 直接调用
+- `UTime::set_timeScale_address()` — 获取函数地址 (void*)
+- `UTime::set_timeScale_hook(detour)` — 安装 inline hook
+- `UTime::set_timeScale_original(args...)` — 调用 hook 前的原始函数
+
+### Hook 示例
+
+```cpp
+void WorldSpeed::init() {
+    UTime::set_timeScale_hook([](float value) {
+        if (WorldSpeed::Get().isEnabled())
+            value = static_cast<float>(WorldSpeed::Get().speed);
+        UTime::set_timeScale_original(value);
+    });
+}
+```
+
+### 字段宏
+
+- `UFIELD(type, name, offset)` — 固定偏移量读写（返回值拷贝）
+- `UFIELD_REF(type, name, offset)` — 固定偏移量引用
+- `UFIELD_AUTO(type, name, "fieldStr")` — 运行时按名字查找偏移
+- `UPROPERTY(type, name, "fieldStr")` — 运行时查找，返回引用
+- `USTATIC_FIELD(type, name, "fieldStr")` — 静态字段读写
+
+### 类解析变体
+
+- `UCLASS(module, className)` — 按名字解析
+- `UCLASS_FROM_FIELD(module, container, fieldName)` — 从另一个类的字段类型解析（适用于嵌套类型）
+- `UCLASS_FROM_FIELDS(module, minMatches, "field1", "field2", ...)` — 按字段特征匹配（适用于混淆类名）
+
+### 实例方法 vs 静态方法
+
+Unity C# 的实例方法在 IL2CPP 中第一个参数是 `this` 指针：
+```cpp
+class UComponent {
+    UCLASS("UnityEngine.CoreModule.dll", "Component")
+    UMETHOD(void*, get_transform, void*)  // void* this
+};
+// 调用：UComponent::get_transform(instance)
+```
+
+静态方法没有 this 参数：
 ```cpp
 class UCamera {
     UCLASS("UnityEngine.CoreModule.dll", "Camera")
-    UMETHOD(void*, get_main)
-    UMETHOD(float, get_fieldOfView, void*)
-    UMETHOD(void, set_fieldOfView, void*, float)
+    UMETHOD(void*, get_main)  // 无参数
 };
+// 调用：UCamera::get_main()
 ```
 
-宏的变体：
-- `UMETHOD(ret, name, ...)` — 静态方法，通过 UnityResolve 自动解析。会生成可调用的 `ClassName::name(args...)`、`name_address()`、`name_hook(detour)`、`name_original(args...)`
-- `UFIELD(type, name, offset)` — 固定偏移，按值拷贝
-- `UFIELD_AUTO(type, name, "fieldName")` — 运行时查找偏移
-- `UFIELD_REF(type, name, offset)` / `UPROPERTY(type, name, "fieldName")` — 按引用返回
-- `USTATIC_FIELD(type, name, "fieldName")` — 静态字段
+## ConfigVar
 
-### 功能系统
-
-继承 `FeatureBase`（`src/features/feature_base.h`）：
+`ConfigVar<T>` 自动持久化到 JSON。Widgets 直接接受 ConfigVar 引用：
 ```cpp
-class MyFeature : public FeatureBase {
-    ConfigVar<bool> enabled{"myfeature.enabled", false};
-    void onEnable() override;
-    void onDisable() override;
-    void onTick() override;
-    void drawUI() override;
-};
+ConfigVar<float> speed{"myfeature.speed", 1.0f};
+Widgets::SliderFloat("Speed", speed, 0.1f, 10.0f);
 ```
 
-在 dllmain.cpp 中通过 `GuiManager::addTab()` 注册。
+批量修改用 `.Edit()` RAII 代理避免多次写盘。
 
-### ConfigVar
+## HookManager
 
-`ConfigVar<T>`（vendor/Config/ConfigVar.h）封装了任意可 JSON 序列化类型，并自动持久化。批量修改可使用 `.Edit()` 的 RAII 代理。`src/gui/widgets.h` 中的控件可直接接收 ConfigVar。
-
-### Hook
-
-`HookManager::install(target, detour)` 使用 safetyhook 的内联 Hook。支持链式 Hook（同一目标可挂多个 detour，按 LIFO 顺序）。可通过 `HookManager::getInstance().getOriginal(detour)` 获取原始函数。
-
-## 注入器配置
-
-修改 `injector/main.cpp` 顶部：
 ```cpp
-constexpr const wchar_t* TARGET_PROCESS = L"Game.exe";
-constexpr const wchar_t* DLL_FILE       = L"UnityCheeto.dll";
+HookManager::install(target_fn_ptr, detour_fn_ptr);
+auto original = HookManager::getInstance().getOriginal(detour_fn_ptr);
 ```
+
+基于 safetyhook 内联 hook。支持链式 hook（同一目标多个 detour，LIFO 顺序）。UMETHOD 宏已封装此流程，通常直接用 `ClassName::method_hook()` 即可。
 
 ## 重要说明
 
-- DLL 采用手动映射（不是通过 LoadLibrary 加载），因此不得调用 `FreeLibraryAndExitThread`。从 DllMain 得到的模块句柄是有效的，但不会被系统加载器跟踪。
-- `vendor/UnityResolve.hpp` 是较大的第三方头文件（约 2000 行）。不要修改它。
-- 日志宏（`LOG_INFO`、`LOG_ERROR` 等）使用 `__VA_OPT__` —— 例如 `LOG_ERROR("msg")` 这种单参数调用是合法的。
-- `external/imgui/` 下的 ImGui 源码作为 DLL 项目的一部分编译，并设置为不使用预编译头（NotUsing）。
+- DLL 是手动映射的，不得调用 `FreeLibraryAndExitThread`
+- `vendor/UnityResolve.hpp` 约 2000 行，不要修改
+- 日志宏（LOG_INFO、LOG_ERROR 等）使用 `__VA_OPT__`，单参数合法
+- `external/imgui/` 源码编译时不使用预编译头（NotUsing）
+- 新增 feature 不需要修改 dllmain.cpp，只需写 .h/.cpp + 在 app.cpp 加注册行
