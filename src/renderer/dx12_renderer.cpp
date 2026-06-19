@@ -3,6 +3,7 @@
 #include "renderer/imgui_style.h"
 #include "gui/gui_manager.h"
 #include "gui/remixicon.hpp"
+#include "gui/LXGWWenKai-Regular.hpp"
 
 #include <imgui_impl_win32.h>
 #include <imgui_impl_dx12.h>
@@ -72,8 +73,13 @@ bool DX12Renderer::initialize(IDXGISwapChain* swapChain, ID3D12CommandQueue* cmd
 
     ApplyMacStyle();
 
-    // Load default font
-    io.Fonts->AddFontDefault();
+    // Load LXGWWenKai as primary font with full Chinese range
+    ImFontConfig fontCfg;
+    fontCfg.OversampleH = 2;
+    fontCfg.OversampleV = 1;
+    io.Fonts->AddFontFromMemoryCompressedTTF(
+        LXGWWenKai_Regular_compressed_data, LXGWWenKai_Regular_compressed_size,
+        16.0f, &fontCfg, io.Fonts->GetGlyphRangesChineseFull());
 
     // Merge RemixIcon font
     static const ImWchar iconRange[] = { 0xEA01, 0xF2FF, 0 };

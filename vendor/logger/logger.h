@@ -10,11 +10,11 @@
 #include <Windows.h>
 
 
-#define LOG(fmt, ...)       Logger_::log(XS(__FILE__), __LINE__, LogLevel::Info, XS(fmt), __VA_ARGS__)
-#define LOG_INFO(fmt, ...)  Logger_::log(XS(__FILE__), __LINE__, LogLevel::Info, XS(fmt), __VA_ARGS__)
-#define LOG_DEBUG(fmt, ...) Logger_::log(XS(__FILE__), __LINE__, LogLevel::Debug, XS(fmt), __VA_ARGS__)
-#define LOG_ERROR(fmt, ...) Logger_::log(XS(__FILE__), __LINE__, LogLevel::Error, XS(fmt), __VA_ARGS__)
-#define LOG_WARNING(fmt, ...)  Logger_::log(XS(__FILE__), __LINE__, LogLevel::Warning, XS(fmt), __VA_ARGS__)
+#define LOG(fmt, ...)       Logger_::log(__FILE__, __LINE__, LogLevel::Info, fmt __VA_OPT__(,) __VA_ARGS__)
+#define LOG_INFO(fmt, ...)  Logger_::log(__FILE__, __LINE__, LogLevel::Info, fmt __VA_OPT__(,) __VA_ARGS__)
+#define LOG_DEBUG(fmt, ...) Logger_::log(__FILE__, __LINE__, LogLevel::Debug, fmt __VA_OPT__(,) __VA_ARGS__)
+#define LOG_ERROR(fmt, ...) Logger_::log(__FILE__, __LINE__, LogLevel::Error, fmt __VA_OPT__(,) __VA_ARGS__)
+#define LOG_WARNING(fmt, ...)  Logger_::log(__FILE__, __LINE__, LogLevel::Warning, fmt __VA_OPT__(,) __VA_ARGS__)
 
 enum class LogLevel
 {

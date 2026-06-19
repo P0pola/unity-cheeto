@@ -38,7 +38,7 @@ void FreeCamera::onTick() {
         pitch_ = std::clamp(pitch_, -89.0f, 89.0f);
 
         Vector3 euler{pitch_, yaw_, 0.0f};
-        UTransform::set_localEulerAngles_Injected(transform, &euler);
+        UTransform::set_localEulerAngles(transform, &euler);
     }
 
     float yawRad = yaw_ * 3.14159265f / 180.0f;
@@ -77,23 +77,26 @@ void FreeCamera::onTick() {
 }
 
 void FreeCamera::drawUI() {
-    Widgets::Toggle("Enable##cam", enabled_);
+    if (Widgets::Section("free_camera", TR("Free Camera"))) {
+        Widgets::Toggle(TR("Enable##cam"), enabled_);
 
-    if (!isEnabled()) return;
+        if (isEnabled()) {
+            ImGui::Spacing();
+            Widgets::SliderFloat(TR("Move Speed#cam"), moveSpeed, 1.0f, 100.0f);
+            Widgets::SliderFloat(TR("Sensitivity#cam"), sensitivity, 0.1f, 10.0f);
 
-    ImGui::Spacing();
-    Widgets::SliderFloat("Move Speed", moveSpeed, 1.0f, 100.0f);
-    Widgets::SliderFloat("Sensitivity", sensitivity, 0.1f, 10.0f);
+            ImGui::Spacing();
+            ImGui::SeparatorText(TR("Bindings"));
+            Widgets::KeyBind("Forward", forwardKey);
+            Widgets::KeyBind("Back", backKey);
+            Widgets::KeyBind("Left", leftKey);
+            Widgets::KeyBind("Right", rightKey);
+            Widgets::KeyBind("Up", upKey);
+            Widgets::KeyBind("Down", downKey);
 
-    ImGui::Spacing();
-    ImGui::SeparatorText("Bindings");
-    Widgets::KeyBind("Forward", forwardKey);
-    Widgets::KeyBind("Back", backKey);
-    Widgets::KeyBind("Left", leftKey);
-    Widgets::KeyBind("Right", rightKey);
-    Widgets::KeyBind("Up", upKey);
-    Widgets::KeyBind("Down", downKey);
-
-    ImGui::Spacing();
-    ImGui::TextDisabled("RMB to rotate");
+            ImGui::Spacing();
+            ImGui::TextDisabled("RMB to rotate");
+        }
+        Widgets::SectionEnd();
+    }
 }

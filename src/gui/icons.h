@@ -10,7 +10,7 @@
 #define ICON_RI_BUG         "\xee\xac\x87"
 
 // Placeholders - fill in codepoints later
-#define ICON_RI_PLAYER      "P"
-#define ICON_RI_WORLD       "W"
-#define ICON_RI_VISUAL      "V"
-#define ICON_RI_MISC        "M"
+#define ICON_RI_PLAYER      "\xEF\x89\xA4"
+#define ICON_RI_WORLD       "\xEE\xB1\xBA"
+#define ICON_RI_VISUAL      "\xEF\x91\x8A"
+#define ICON_RI_MISC        "\xEF\x91\x82"

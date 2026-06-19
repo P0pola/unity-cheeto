@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git submodule *)",
+      "WebSearch",
+      "Bash(grep -E \"\\\\.\\(sln|vcxproj|md|txt|rules\\)$\")"
+    ]
+  }
+}

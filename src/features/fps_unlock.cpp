@@ -13,16 +13,22 @@ void FPSUnlock::onDisable() {
 void FPSUnlock::onTick() {
     if (!isEnabled()) return;
 
-    UApplication::set_targetFrameRate(static_cast<int>(targetFPS));
+    int target = static_cast<int>(targetFPS);
+    UApplication::set_targetFrameRate(target);
     UQualitySettings::set_vSyncCount(0);
 }
 
 void FPSUnlock::drawUI() {
-    Widgets::Toggle("Enable##fps", enabled_);
+    if (Widgets::Section("fps_unlock", TR("FPS Unlock"))) {
+        Widgets::Toggle(TR("Enable##fps"), enabled_);
 
-    if (isEnabled()) {
+        if (isEnabled()) {
+            ImGui::Spacing();
+            Widgets::SliderInt(TR("Target FPS"), targetFPS, 30, 300);
+        }
+
         ImGui::Spacing();
-        Widgets::SliderInt("Target FPS", targetFPS, 30, 999);
-        ImGui::TextDisabled("999 = uncapped");
+        ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
+        Widgets::SectionEnd();
     }
 }

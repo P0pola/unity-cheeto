@@ -3,8 +3,8 @@
 #include <unordered_map>
 
 
-#define TR(key) Translator::GetInstance().translate(XS(key)).c_str()
-#define TR_(key) Translator::GetInstance().translate(key).c_str()
+#define TR(key) Translator::GetInstance().translate(key).c_str()
+
 
 
 enum class Language : int32_t {

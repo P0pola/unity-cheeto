@@ -30,6 +30,7 @@ void ConfigManager::Load()
 
 void ConfigManager::Save()
 {
+    std::filesystem::create_directories(configPath_.parent_path());
     std::ofstream out(configPath_);
     out << root_.dump(4);
 }

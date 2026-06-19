@@ -31,6 +31,6 @@ private:
 
     std::vector<Tab> tabs_;
     int activeTab_ = 0;
-    bool visible_ = false;
+    bool visible_ = true;
     float alpha_ = 0.0f;
 };

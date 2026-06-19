@@ -1,0 +1,28 @@
+#include "pch.h"
+#include "features/world_speed.h"
+
+void WorldSpeed::onEnable() {
+    LOG_INFO("World Speed enabled (scale: {:.2f})", static_cast<float>(speed));
+}
+
+void WorldSpeed::onDisable() {
+    LOG_INFO("World Speed disabled, restoring 1.0");
+    UTime::set_timeScale(1.0f);
+}
+
+void WorldSpeed::onTick() {
+    if (!isEnabled()) return;
+    UTime::set_timeScale(static_cast<float>(speed));
+}
+
+void WorldSpeed::drawUI() {
+    if (Widgets::Section("world_speed", TR("World Speed"))) {
+        Widgets::Toggle(TR("Enable##worldspeed"), enabled_);
+
+        if (isEnabled()) {
+            ImGui::Spacing();
+            Widgets::SliderFloat(TR("Speed##worldspeed"), speed, 0.1f, 10.0f, "%.2f");
+        }
+        Widgets::SectionEnd();
+    }
+}

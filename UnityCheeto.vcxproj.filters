@@ -25,9 +25,6 @@
     <Filter Include="vendor">
       <UniqueIdentifier>{A1B2C3D4-E5F6-7890-ABCD-000000000002}</UniqueIdentifier>
     </Filter>
-    <Filter Include="external\imgui">
-      <UniqueIdentifier>{A1B2C3D4-E5F6-7890-ABCD-000000000003}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\pch.cpp">
@@ -57,27 +54,6 @@
     <ClCompile Include="src\features\free_camera.cpp">
       <Filter>src\features</Filter>
     </ClCompile>
-    <ClCompile Include="external\imgui\imgui.cpp">
-      <Filter>external\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="external\imgui\imgui_draw.cpp">
-      <Filter>external\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="external\imgui\imgui_tables.cpp">
-      <Filter>external\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="external\imgui\imgui_widgets.cpp">
-      <Filter>external\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="external\imgui\imgui_demo.cpp">
-      <Filter>external\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="external\imgui\backends\imgui_impl_dx12.cpp">
-      <Filter>external\imgui</Filter>
-    </ClCompile>
-    <ClCompile Include="external\imgui\backends\imgui_impl_win32.cpp">
-      <Filter>external\imgui</Filter>
-    </ClCompile>
     <ClCompile Include="vendor\safetyhook\safetyhook.cpp">
       <Filter>vendor</Filter>
     </ClCompile>
@@ -96,6 +72,17 @@
     <ClCompile Include="vendor\Language\language.cpp">
       <Filter>vendor</Filter>
     </ClCompile>
+    <ClCompile Include="external\imgui\imgui.cpp" />
+    <ClCompile Include="external\imgui\imgui_draw.cpp" />
+    <ClCompile Include="external\imgui\imgui_tables.cpp" />
+    <ClCompile Include="external\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="external\imgui\imgui_demo.cpp" />
+    <ClCompile Include="external\imgui\backends\imgui_impl_dx12.cpp" />
+    <ClCompile Include="external\imgui\backends\imgui_impl_win32.cpp" />
+    <ClCompile Include="src\core\hooks\dx11_hook.cpp" />
+    <ClCompile Include="src\renderer\dx11_renderer.cpp" />
+    <ClCompile Include="external\imgui\backends\imgui_impl_dx11.cpp" />
+    <ClCompile Include="src\features\world_speed.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\pch.h">
@@ -149,5 +136,14 @@
     <ClInclude Include="vendor\xorstr.h">
       <Filter>vendor</Filter>
     </ClInclude>
+    <ClInclude Include="src\gui\remixicon.hpp" />
+    <ClInclude Include="vendor\safetyhook\safetyhook.hpp" />
+    <ClInclude Include="vendor\safetyhook\Zydis.h" />
+    <ClInclude Include="src\gui\icons.h" />
+    <ClInclude Include="src\core\unity\unity_macros.h" />
+    <ClInclude Include="src\core\unity\unity_types.h" />
+    <ClInclude Include="src\core\hooks\dx11_hook.h" />
+    <ClInclude Include="src\renderer\dx11_renderer.h" />
+    <ClInclude Include="src\features\world_speed.h" />
   </ItemGroup>
 </Project>

@@ -162,7 +162,7 @@ private: \
         static fn_t get() { \
             static fn_t ptr = [] { \
                 auto* m = resolve(); \
-                return m ? m->Cast<RETURN_TYPE, __VA_ARGS__>() : nullptr; \
+                return m ? m->Cast<RETURN_TYPE __VA_OPT__(,) __VA_ARGS__>() : (fn_t)nullptr; \
             }(); \
             return ptr; \
         } \
@@ -173,7 +173,7 @@ public: \
     static RETURN_TYPE METHOD_NAME(Args&&... args) { \
         auto fn = METHOD_NAME##_t::get(); \
         if (fn) return fn(std::forward<Args>(args)...); \
-        if constexpr (!std::is_void_v<RETURN_TYPE>) return RETURN_TYPE{}; \
+        if constexpr (!std::is_void_v<RETURN_TYPE>) { RETURN_TYPE _{}; return _; } \
     } \
     static void* METHOD_NAME##_address() { \
         auto* m = METHOD_NAME##_t::resolve(); \
@@ -197,7 +197,7 @@ public: \
     static RETURN_TYPE METHOD_NAME##_original(Args&&... args) { \
         if (METHOD_NAME##_t::original_ptr) \
             return METHOD_NAME##_t::original_ptr(std::forward<Args>(args)...); \
-        if constexpr (!std::is_void_v<RETURN_TYPE>) return RETURN_TYPE{}; \
+        if constexpr (!std::is_void_v<RETURN_TYPE>) { RETURN_TYPE _{}; return _; } \
     }
 
 // ============================================================================
@@ -213,7 +213,7 @@ private: \
                 auto* klass = uclass(); \
                 if (!klass) return (fn_t)nullptr; \
                 auto* m = klass->Get<UnityResolve::Method>(#METHOD_NAME, #PARAM_TYPES); \
-                return m ? m->Cast<RETURN_TYPE, __VA_ARGS__>() : (fn_t)nullptr; \
+                return m ? m->Cast<RETURN_TYPE __VA_OPT__(,) __VA_ARGS__>() : (fn_t)nullptr; \
             }(); \
             return ptr; \
         } \
@@ -223,7 +223,7 @@ public: \
     static RETURN_TYPE METHOD_NAME##_##PARAM_TYPES(Args&&... args) { \
         auto fn = METHOD_NAME##_##PARAM_TYPES##_t::get(); \
         if (fn) return fn(std::forward<Args>(args)...); \
-        if constexpr (!std::is_void_v<RETURN_TYPE>) return RETURN_TYPE{}; \
+        if constexpr (!std::is_void_v<RETURN_TYPE>) { RETURN_TYPE _{}; return _; } \
     }
 
 // ============================================================================

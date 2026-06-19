@@ -9,6 +9,8 @@ bool SliderFloat(const char* label, float* v, float min, float max, const char* 
 bool SliderInt(const char* label, int* v, int min, int max);
 bool KeyBind(const char* label, int* key);
 bool CategoryHeader(const char* label, bool* open);
+bool Section(const char* id, const char* displayText, bool defaultOpen = true);
+void SectionEnd();
 void HelpMarker(const char* desc);
 
 // ConfigVar overloads

@@ -62,18 +62,18 @@ bool Translator::loadFromString(const std::string& jsonStr) {
 }
 
 std::string Translator::translate(const std::string& key) const {
-    try {
-        const auto& translation = translations.at(key);
-        const std::string langStr = getLanguageString(currentLanguage);
-        
-        if (translation.contains(langStr)) {
-            return translation[langStr].get<std::string>();
-        }
+    if (!translations.is_object()) return key;
+
+    auto it = translations.find(key);
+    if (it == translations.end()) return key;
+
+    const std::string langStr = getLanguageString(currentLanguage);
+    if (it->contains(langStr)) {
+        auto& val = (*it)[langStr];
+        if (val.is_string())
+            return val.get<std::string>();
     }
-    catch (const nlohmann::json::exception&) {
-        // If any error occurs during translation lookup, return the original key
-    }
-    
+
     return key;
 }
 

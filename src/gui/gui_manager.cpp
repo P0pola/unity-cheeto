@@ -102,11 +102,29 @@ void GuiManager::drawSidebar() {
     float btnSize = 40.0f;
     float startY = sbMin.y + 12.0f;
     float padX = (SIDEBAR_W - btnSize) * 0.5f;
+    float spacing = btnSize + 6.0f;
 
     ImGui::SetCursorScreenPos(ImVec2(sbMin.x + padX, startY));
 
+    // Animate active tab indicator position
+    auto* storage = ImGui::GetStateStorage();
+    ImGuiID sliderId = ImGui::GetID("##tab_slider");
+    float targetY = startY + activeTab_ * spacing;
+    float sliderY = storage->GetFloat(sliderId, targetY);
+    if (sliderY != targetY) {
+        float speed = 12.0f * ImGui::GetIO().DeltaTime;
+        sliderY += (targetY - sliderY) * std::min(speed, 1.0f);
+        if (std::abs(sliderY - targetY) < 0.5f) sliderY = targetY;
+        storage->SetFloat(sliderId, sliderY);
+    }
+
+    // Draw sliding active background
+    ImVec2 activeMin(sbMin.x + padX, sliderY);
+    ImVec2 activeMax(sbMin.x + padX + btnSize, sliderY + btnSize);
+    dl->AddRectFilled(activeMin, activeMax, IM_COL32(51, 120, 245, 200), 8.0f);
+
     for (int i = 0; i < static_cast<int>(tabs_.size()); i++) {
-        ImVec2 btnPos(sbMin.x + padX, startY + i * (btnSize + 6.0f));
+        ImVec2 btnPos(sbMin.x + padX, startY + i * spacing);
         ImRect btnRect(btnPos, ImVec2(btnPos.x + btnSize, btnPos.y + btnSize));
 
         ImGuiID id = ImGui::GetID((std::string("##tab") + std::to_string(i)).c_str());
@@ -118,17 +136,33 @@ void GuiManager::drawSidebar() {
 
         bool active = (i == activeTab_);
 
-        // Button background
-        if (active) {
+        // Hover highlight (only for non-active tabs)
+        if (!active && hovered) {
+            ImGuiID hoverId = ImGui::GetID((std::string("##tabh") + std::to_string(i)).c_str());
+            float hoverAnim = storage->GetFloat(hoverId, 0.0f);
+            hoverAnim += (1.0f - hoverAnim) * std::min(10.0f * ImGui::GetIO().DeltaTime, 1.0f);
+            storage->SetFloat(hoverId, hoverAnim);
             dl->AddRectFilled(btnRect.Min, btnRect.Max,
-                IM_COL32(51, 120, 245, 200), 8.0f);
-        } else if (hovered) {
-            dl->AddRectFilled(btnRect.Min, btnRect.Max,
-                IM_COL32(0, 0, 0, 15), 8.0f);
+                IM_COL32(0, 0, 0, (int)(20 * hoverAnim)), 8.0f);
+        } else if (!active) {
+            ImGuiID hoverId = ImGui::GetID((std::string("##tabh") + std::to_string(i)).c_str());
+            float hoverAnim = storage->GetFloat(hoverId, 0.0f);
+            if (hoverAnim > 0.01f) {
+                hoverAnim *= std::max(1.0f - 10.0f * ImGui::GetIO().DeltaTime, 0.0f);
+                storage->SetFloat(hoverId, hoverAnim);
+                dl->AddRectFilled(btnRect.Min, btnRect.Max,
+                    IM_COL32(0, 0, 0, (int)(20 * hoverAnim)), 8.0f);
+            }
         }
 
-        // Icon text centered
-        ImU32 textCol = active ? IM_COL32(255, 255, 255, 255) : IM_COL32(80, 80, 90, 220);
+        // Icon text centered — color lerps based on distance from slider
+        float dist = std::abs(btnPos.y - sliderY) / spacing;
+        float iconAlpha = std::max(1.0f - dist, 0.0f);
+        ImU32 textCol = active
+            ? IM_COL32(255, 255, 255, (int)(255 * iconAlpha + 220 * (1.0f - iconAlpha)))
+            : IM_COL32(80, 80, 90, 220);
+        if (active) textCol = IM_COL32(255, 255, 255, 255);
+
         ImVec2 textSize = ImGui::CalcTextSize(tabs_[i].icon.c_str());
         ImVec2 textPos(
             btnPos.x + (btnSize - textSize.x) * 0.5f,
