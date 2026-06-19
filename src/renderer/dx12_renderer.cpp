@@ -1,4 +1,6 @@
 #include "pch.h"
+
+#if USE_DX12
 #include "renderer/dx12_renderer.h"
 #include "renderer/imgui_style.h"
 #include "gui/gui_manager.h"
@@ -126,6 +128,11 @@ void DX12Renderer::destroyRenderTargets() {
 void DX12Renderer::render() {
     if (!initialized_) return;
 
+    // Recreate render targets if invalidated (after resize)
+    if (!frames_[0].backBuffer) {
+        if (!createRenderTargets()) return;
+    }
+
     ImGui_ImplDX12_NewFrame();
     ImGui_ImplWin32_NewFrame();
     ImGui::NewFrame();
@@ -138,11 +145,9 @@ void DX12Renderer::render() {
     auto frameIdx = swapChain_->GetCurrentBackBufferIndex();
     auto& frame = frames_[frameIdx];
 
-    // Wait for previous frame
-    fenceValue_++;
-    cmdQueue_->Signal(fence_.Get(), fenceValue_);
-    if (fence_->GetCompletedValue() < fenceValue_) {
-        fence_->SetEventOnCompletion(fenceValue_, fenceEvent_);
+    // Wait until this frame's previous submission is done
+    if (fence_->GetCompletedValue() < frame.fenceValue) {
+        fence_->SetEventOnCompletion(frame.fenceValue, fenceEvent_);
         WaitForSingleObject(fenceEvent_, INFINITE);
     }
 
@@ -172,16 +177,32 @@ void DX12Renderer::render() {
 
     ID3D12CommandList* cmdLists[] = { cmdList_.Get() };
     cmdQueue_->ExecuteCommandLists(1, cmdLists);
+
+    // Signal for this frame so next time we use it we know it's done
+    fenceValue_++;
+    frame.fenceValue = fenceValue_;
+    cmdQueue_->Signal(fence_.Get(), fenceValue_);
+}
+
+void DX12Renderer::waitForGpu() {
+    fenceValue_++;
+    cmdQueue_->Signal(fence_.Get(), fenceValue_);
+    if (fence_->GetCompletedValue() < fenceValue_) {
+        fence_->SetEventOnCompletion(fenceValue_, fenceEvent_);
+        WaitForSingleObject(fenceEvent_, INFINITE);
+    }
 }
 
 void DX12Renderer::invalidate() {
     if (!initialized_) return;
+    waitForGpu();
     destroyRenderTargets();
-    // Will recreate on next present
 }
 
 void DX12Renderer::shutdown() {
     if (!initialized_) return;
+
+    waitForGpu();
 
     ImGui_ImplDX12_Shutdown();
     ImGui_ImplWin32_Shutdown();
@@ -213,3 +234,5 @@ LRESULT CALLBACK DX12Renderer::wndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARA
 
     return CallWindowProcW(self.originalWndProc_, hwnd, msg, wParam, lParam);
 }
+
+#endif // USE_DX12

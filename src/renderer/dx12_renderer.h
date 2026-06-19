@@ -23,11 +23,13 @@ private:
 
     bool createRenderTargets();
     void destroyRenderTargets();
+    void waitForGpu();
 
     struct FrameContext {
         ComPtr<ID3D12CommandAllocator> allocator;
         ComPtr<ID3D12Resource> backBuffer;
         D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle{};
+        UINT64 fenceValue = 0;
     };
 
     ComPtr<ID3D12Device> device_;

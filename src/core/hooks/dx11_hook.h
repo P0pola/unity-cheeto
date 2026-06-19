@@ -5,9 +5,9 @@
 
 using Microsoft::WRL::ComPtr;
 
-class DX11Hook {
+class DXGIHook {
 public:
-    static DX11Hook& Get() { static DX11Hook inst; return inst; }
+    static DXGIHook& Get() { static DXGIHook inst; return inst; }
 
     using PresentCallback = std::function<void(IDXGISwapChain*, UINT, UINT)>;
     using ResizeCallback = std::function<void(IDXGISwapChain*, UINT, UINT, UINT, DXGI_FORMAT, UINT)>;
@@ -19,7 +19,7 @@ public:
     void onResize(ResizeCallback cb) { resizeCb_ = std::move(cb); }
 
 private:
-    DX11Hook() = default;
+    DXGIHook() = default;
 
     static HRESULT WINAPI hkPresent(IDXGISwapChain* swapChain, UINT syncInterval, UINT flags);
     static HRESULT WINAPI hkResizeBuffers(IDXGISwapChain* swapChain, UINT bufferCount, UINT width, UINT height, DXGI_FORMAT format, UINT flags);

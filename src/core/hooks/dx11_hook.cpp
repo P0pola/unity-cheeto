@@ -1,6 +1,11 @@
 #include "pch.h"
 #include "core/hooks/dx11_hook.h"
 
+#if USE_DX12
+#pragma comment(lib, "d3d12.lib")
+#else
+#include <d3d11.h>
+#endif
 #pragma comment(lib, "dxgi.lib")
 
 namespace {
@@ -11,11 +16,68 @@ namespace {
     ResizeBuffersFn oResizeBuffers = nullptr;
 }
 
-bool DX11Hook::createDummyDevice() {
+bool DXGIHook::createDummyDevice() {
+    WNDCLASSEXA wc{};
+    wc.cbSize = sizeof(wc);
+    wc.lpfnWndProc = DefWindowProcA;
+    wc.hInstance = GetModuleHandleA(nullptr);
+    wc.lpszClassName = "DXGIDummy";
+    RegisterClassExA(&wc);
+
+    HWND hwnd = CreateWindowExA(0, wc.lpszClassName, "", WS_OVERLAPPEDWINDOW,
+        0, 0, 100, 100, nullptr, nullptr, wc.hInstance, nullptr);
+
+    ComPtr<IDXGISwapChain> swapChain;
+
+#if USE_DX12
+    ComPtr<ID3D12Device> device;
+    if (FAILED(D3D12CreateDevice(nullptr, D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&device)))) {
+        DestroyWindow(hwnd);
+        UnregisterClassA(wc.lpszClassName, wc.hInstance);
+        return false;
+    }
+
+    D3D12_COMMAND_QUEUE_DESC queueDesc{};
+    queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
+    ComPtr<ID3D12CommandQueue> cmdQueue;
+    if (FAILED(device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&cmdQueue)))) {
+        DestroyWindow(hwnd);
+        UnregisterClassA(wc.lpszClassName, wc.hInstance);
+        return false;
+    }
+
+    DXGI_SWAP_CHAIN_DESC sd{};
+    sd.BufferCount = 2;
+    sd.BufferDesc.Width = 100;
+    sd.BufferDesc.Height = 100;
+    sd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+    sd.OutputWindow = hwnd;
+    sd.SampleDesc.Count = 1;
+    sd.Windowed = TRUE;
+    sd.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+
+    ComPtr<IDXGIFactory4> factory;
+    if (FAILED(CreateDXGIFactory1(IID_PPV_ARGS(&factory)))) {
+        DestroyWindow(hwnd);
+        UnregisterClassA(wc.lpszClassName, wc.hInstance);
+        return false;
+    }
+
+    if (FAILED(factory->CreateSwapChain(cmdQueue.Get(), &sd, &swapChain))) {
+        DestroyWindow(hwnd);
+        UnregisterClassA(wc.lpszClassName, wc.hInstance);
+        return false;
+    }
+#else
     HMODULE d3d11Module = GetModuleHandleA("d3d11.dll");
     if (!d3d11Module) {
         d3d11Module = LoadLibraryA("d3d11.dll");
-        if (!d3d11Module) return false;
+        if (!d3d11Module) {
+            DestroyWindow(hwnd);
+            UnregisterClassA(wc.lpszClassName, wc.hInstance);
+            return false;
+        }
     }
 
     using PFN_D3D11CreateDeviceAndSwapChain = HRESULT(WINAPI*)(
@@ -26,17 +88,11 @@ bool DX11Hook::createDummyDevice() {
 
     auto pCreate = reinterpret_cast<PFN_D3D11CreateDeviceAndSwapChain>(
         GetProcAddress(d3d11Module, "D3D11CreateDeviceAndSwapChain"));
-    if (!pCreate) return false;
-
-    WNDCLASSEXA wc{};
-    wc.cbSize = sizeof(wc);
-    wc.lpfnWndProc = DefWindowProcA;
-    wc.hInstance = GetModuleHandleA(nullptr);
-    wc.lpszClassName = "DXGIDummy";
-    RegisterClassExA(&wc);
-
-    HWND hwnd = CreateWindowExA(0, wc.lpszClassName, "", WS_OVERLAPPEDWINDOW,
-        0, 0, 100, 100, nullptr, nullptr, wc.hInstance, nullptr);
+    if (!pCreate) {
+        DestroyWindow(hwnd);
+        UnregisterClassA(wc.lpszClassName, wc.hInstance);
+        return false;
+    }
 
     DXGI_SWAP_CHAIN_DESC sd{};
     sd.BufferCount = 1;
@@ -51,7 +107,6 @@ bool DX11Hook::createDummyDevice() {
 
     ComPtr<ID3D11Device> device;
     ComPtr<ID3D11DeviceContext> context;
-    ComPtr<IDXGISwapChain> swapChain;
 
     HRESULT hr = pCreate(
         nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, 0,
@@ -63,6 +118,7 @@ bool DX11Hook::createDummyDevice() {
         UnregisterClassA(wc.lpszClassName, wc.hInstance);
         return false;
     }
+#endif
 
     void** swapChainVTable = *reinterpret_cast<void***>(swapChain.Get());
     presentTarget_ = swapChainVTable[8];   // IDXGISwapChain::Present
@@ -73,23 +129,23 @@ bool DX11Hook::createDummyDevice() {
     return true;
 }
 
-bool DX11Hook::initialize() {
+bool DXGIHook::initialize() {
     if (initialized_) return true;
 
-    LOG_INFO("Initializing DX11 hooks...");
+    LOG_INFO("Initializing DXGI hooks...");
 
     if (!createDummyDevice()) {
-        LOG_ERROR("Failed to create dummy device for DX11 VTable");
+        LOG_ERROR("Failed to create dummy device for DXGI VTable");
         return false;
     }
 
     auto& hm = HookManager::getInstance();
 
-    auto presentDetour = reinterpret_cast<PresentFn>(&DX11Hook::hkPresent);
-    auto resizeDetour = reinterpret_cast<ResizeBuffersFn>(&DX11Hook::hkResizeBuffers);
+    auto presentDetour = reinterpret_cast<PresentFn>(&DXGIHook::hkPresent);
+    auto resizeDetour = reinterpret_cast<ResizeBuffersFn>(&DXGIHook::hkResizeBuffers);
 
     if (!HookManager::install(reinterpret_cast<PresentFn>(presentTarget_), presentDetour)) {
-        LOG_ERROR("DX11 Present hook failed");
+        LOG_ERROR("DXGI Present hook failed");
         return false;
     }
     oPresent = hm.getOriginal(presentDetour);
@@ -97,22 +153,22 @@ bool DX11Hook::initialize() {
     if (HookManager::install(reinterpret_cast<ResizeBuffersFn>(resizeTarget_), resizeDetour)) {
         oResizeBuffers = hm.getOriginal(resizeDetour);
     } else {
-        LOG_WARNING("DX11 ResizeBuffers hook failed");
+        LOG_WARNING("DXGI ResizeBuffers hook failed");
     }
 
     initialized_ = true;
-    LOG_INFO("DX11 hooks initialized successfully");
+    LOG_INFO("DXGI hooks initialized successfully");
     return true;
 }
 
-void DX11Hook::shutdown() {
+void DXGIHook::shutdown() {
     if (!initialized_) return;
     HookManager::getInstance().shutdown();
     initialized_ = false;
 }
 
-HRESULT WINAPI DX11Hook::hkPresent(IDXGISwapChain* swapChain, UINT syncInterval, UINT flags) {
-    auto& self = DX11Hook::Get();
+HRESULT WINAPI DXGIHook::hkPresent(IDXGISwapChain* swapChain, UINT syncInterval, UINT flags) {
+    auto& self = DXGIHook::Get();
 
     if (self.presentCb_)
         self.presentCb_(swapChain, syncInterval, flags);
@@ -120,8 +176,8 @@ HRESULT WINAPI DX11Hook::hkPresent(IDXGISwapChain* swapChain, UINT syncInterval,
     return oPresent(swapChain, syncInterval, flags);
 }
 
-HRESULT WINAPI DX11Hook::hkResizeBuffers(IDXGISwapChain* swapChain, UINT bufferCount, UINT width, UINT height, DXGI_FORMAT format, UINT flags) {
-    auto& self = DX11Hook::Get();
+HRESULT WINAPI DXGIHook::hkResizeBuffers(IDXGISwapChain* swapChain, UINT bufferCount, UINT width, UINT height, DXGI_FORMAT format, UINT flags) {
+    auto& self = DXGIHook::Get();
     if (self.resizeCb_)
         self.resizeCb_(swapChain, bufferCount, width, height, format, flags);
     return oResizeBuffers(swapChain, bufferCount, width, height, format, flags);

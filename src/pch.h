@@ -1,10 +1,17 @@
 #pragma once
 
+// Graphics API switch: set to 1 for DX12, 0 for DX11
+#define USE_DX12 0
+
 #include <Windows.h>
 
+#if USE_DX12
 #include <d3d12.h>
-#include <d3d11.h>
 #include <dxgi1_4.h>
+#else
+#include <d3d11.h>
+#include <dxgi.h>
+#endif
 #include <d3dcompiler.h>
 #include <wrl/client.h>
 

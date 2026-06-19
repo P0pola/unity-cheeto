@@ -1,8 +1,11 @@
 #include "pch.h"
 #include "core/hooks/dx11_hook.h"
+#if USE_DX12
 #include "core/hooks/dx12_hook.h"
-#include "renderer/dx11_renderer.h"
 #include "renderer/dx12_renderer.h"
+#else
+#include "renderer/dx11_renderer.h"
+#endif
 #include "gui/gui_manager.h"
 #include "gui/icons.h"
 #include "gui/widgets.h"
@@ -12,9 +15,6 @@
 
 static HMODULE g_hModule = nullptr;
 static std::atomic<bool> g_running = true;
-
-enum class GraphicsAPI { Unknown, DX11, DX12 };
-static GraphicsAPI g_api = GraphicsAPI::Unknown;
 
 static ConfigVar<int> g_toggleKey{"menu.toggleKey", VK_INSERT};
 
@@ -83,56 +83,40 @@ void onPresent(IDXGISwapChain* swapChain, UINT, UINT) {
         wasDown = down;
     }
 
-    // First call: detect graphics API via QueryInterface
-    if (g_api == GraphicsAPI::Unknown) {
-        ComPtr<ID3D12Device> d3d12Device;
-        if (SUCCEEDED(swapChain->GetDevice(IID_PPV_ARGS(&d3d12Device)))) {
-            g_api = GraphicsAPI::DX12;
-            LOG_INFO("Detected D3D12 device");
-
-            // For DX12 we also need ExecuteCommandLists hook to capture command queue
+#if USE_DX12
+    auto& renderer = DX12Renderer::Get();
+    if (!renderer.isReady()) {
+        static bool hooked = false;
+        if (!hooked) {
             DX12Hook::Get().hookFromSwapChain(swapChain);
-        } else {
-            g_api = GraphicsAPI::DX11;
-            LOG_INFO("Detected D3D11 device");
+            hooked = true;
         }
+        auto* cmdQueue = DX12Hook::Get().getCommandQueue();
+        if (cmdQueue)
+            renderer.initialize(swapChain, cmdQueue);
         return;
     }
-
-    if (g_api == GraphicsAPI::DX12) {
-        auto& renderer = DX12Renderer::Get();
-        if (!renderer.isReady()) {
-            auto* cmdQueue = DX12Hook::Get().getCommandQueue();
-            if (cmdQueue)
-                renderer.initialize(swapChain, cmdQueue);
-            return;
-        }
-
-        HotkeyManager::Get().tick();
-        FPSUnlock::Get().onTick();
-        FreeCamera::Get().onTick();
-        WorldSpeed::Get().onTick();
-        renderer.render();
-    } else {
-        auto& renderer = DX11Renderer::Get();
-        if (!renderer.isReady()) {
-            renderer.initialize(swapChain);
-            return;
-        }
-
-        HotkeyManager::Get().tick();
-        FPSUnlock::Get().onTick();
-        FreeCamera::Get().onTick();
-        WorldSpeed::Get().onTick();
-        renderer.render();
+#else
+    auto& renderer = DX11Renderer::Get();
+    if (!renderer.isReady()) {
+        renderer.initialize(swapChain);
+        return;
     }
+#endif
+
+    HotkeyManager::Get().tick();
+    FPSUnlock::Get().onTick();
+    FreeCamera::Get().onTick();
+    WorldSpeed::Get().onTick();
+    renderer.render();
 }
 
 void onResize(IDXGISwapChain*, UINT, UINT, UINT, DXGI_FORMAT, UINT) {
-    if (g_api == GraphicsAPI::DX12)
-        DX12Renderer::Get().invalidate();
-    else if (g_api == GraphicsAPI::DX11)
-        DX11Renderer::Get().invalidate();
+#if USE_DX12
+    DX12Renderer::Get().invalidate();
+#else
+    DX11Renderer::Get().invalidate();
+#endif
 }
 
 DWORD WINAPI mainThread(LPVOID) {
@@ -159,8 +143,8 @@ DWORD WINAPI mainThread(LPVOID) {
 
     initializeFeatures();
 
-    // Hook DXGI Present via DX11 dummy device (works for both DX11 and DX12 games)
-    auto& hook = DX11Hook::Get();
+    // Hook DXGI Present via dummy device (works for both DX11 and DX12 games)
+    auto& hook = DXGIHook::Get();
     hook.onPresent(onPresent);
     hook.onResize(onResize);
 
@@ -174,15 +158,14 @@ DWORD WINAPI mainThread(LPVOID) {
     while (g_running)
         Sleep(100);
 
-    if (g_api == GraphicsAPI::DX12) {
-        DX12Renderer::Get().shutdown();
-        DX12Hook::Get().shutdown();
-    } else if (g_api == GraphicsAPI::DX11) {
-        DX11Renderer::Get().shutdown();
-       
-    }
-    DX11Hook::Get().shutdown();
-  
+#if USE_DX12
+    DX12Renderer::Get().shutdown();
+    DX12Hook::Get().shutdown();
+#else
+    DX11Renderer::Get().shutdown();
+#endif
+    DXGIHook::Get().shutdown();
+
     Logger_::detach();
 
     return 0;
