@@ -1,6 +1,6 @@
 #include "pch.h"
 
-#if USE_DX12
+#if USE_GFX_API == GFX_API_DX12
 #include "core/hooks/dx12_hook.h"
 
 #pragma comment(lib, "dxgi.lib")
@@ -57,4 +57,4 @@ void WINAPI DX12Hook::hkExecuteCommandLists(ID3D12CommandQueue* queue, UINT numL
     oExecuteCommandLists(queue, numLists, lists);
 }
 
-#endif // USE_DX12
+#endif // USE_GFX_API == GFX_API_DX12

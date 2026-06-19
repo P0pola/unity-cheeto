@@ -1,5 +1,5 @@
 #pragma once
-#include <dxgi.h>
+#include <dxgi1_2.h>
 #include <wrl/client.h>
 #include <functional>
 
@@ -22,6 +22,7 @@ private:
     DXGIHook() = default;
 
     static HRESULT WINAPI hkPresent(IDXGISwapChain* swapChain, UINT syncInterval, UINT flags);
+    static HRESULT WINAPI hkPresent1(IDXGISwapChain1* swapChain, UINT syncInterval, UINT flags, const DXGI_PRESENT_PARAMETERS* pParams);
     static HRESULT WINAPI hkResizeBuffers(IDXGISwapChain* swapChain, UINT bufferCount, UINT width, UINT height, DXGI_FORMAT format, UINT flags);
 
     bool createDummyDevice();
@@ -30,6 +31,7 @@ private:
     ResizeCallback resizeCb_;
 
     void* presentTarget_ = nullptr;
+    void* present1Target_ = nullptr;
     void* resizeTarget_ = nullptr;
 
     bool initialized_ = false;

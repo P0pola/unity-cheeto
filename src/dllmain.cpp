@@ -1,11 +1,17 @@
 #include "pch.h"
+
+#if USE_GFX_API == GFX_API_OPENGL
+#include "core/hooks/opengl_hook.h"
+#include "renderer/opengl_renderer.h"
+#elif USE_GFX_API == GFX_API_DX12
 #include "core/hooks/dx11_hook.h"
-#if USE_DX12
 #include "core/hooks/dx12_hook.h"
 #include "renderer/dx12_renderer.h"
 #else
+#include "core/hooks/dx11_hook.h"
 #include "renderer/dx11_renderer.h"
 #endif
+
 #include "gui/gui_manager.h"
 #include "gui/icons.h"
 #include "gui/widgets.h"
@@ -36,7 +42,7 @@ void initializeFeatures() {
     });
 
     gui.addTab(ICON_RI_MISC, "Misc", [] {
-        
+
     });
 
     gui.addTab(ICON_RI_SETTINGS, "Setting", [] {
@@ -73,17 +79,38 @@ void initializeFeatures() {
     });
 }
 
-void onPresent(IDXGISwapChain* swapChain, UINT, UINT) {
-    // Dynamic menu toggle hotkey
-    {
-        static bool wasDown = false;
-        bool down = (GetAsyncKeyState(static_cast<int>(g_toggleKey)) & 0x8000) != 0;
-        if (!down && wasDown)
-            GuiManager::Get().toggle();
-        wasDown = down;
+static void tickToggleKey() {
+    static bool wasDown = false;
+    bool down = (GetAsyncKeyState(static_cast<int>(g_toggleKey)) & 0x8000) != 0;
+    if (!down && wasDown)
+        GuiManager::Get().toggle();
+    wasDown = down;
+}
+
+#if USE_GFX_API == GFX_API_OPENGL
+
+void onSwapBuffers(HDC hdc) {
+    tickToggleKey();
+
+    auto& renderer = OpenGLRenderer::Get();
+    if (!renderer.isReady()) {
+        renderer.initialize(hdc);
+        return;
     }
 
-#if USE_DX12
+    HotkeyManager::Get().tick();
+    FPSUnlock::Get().onTick();
+    FreeCamera::Get().onTick();
+    WorldSpeed::Get().onTick();
+    renderer.render();
+}
+
+#else // DX11 / DX12
+
+void onPresent(IDXGISwapChain* swapChain, UINT, UINT) {
+    tickToggleKey();
+
+#if USE_GFX_API == GFX_API_DX12
     auto& renderer = DX12Renderer::Get();
     if (!renderer.isReady()) {
         static bool hooked = false;
@@ -112,18 +139,19 @@ void onPresent(IDXGISwapChain* swapChain, UINT, UINT) {
 }
 
 void onResize(IDXGISwapChain*, UINT, UINT, UINT, DXGI_FORMAT, UINT) {
-#if USE_DX12
+#if USE_GFX_API == GFX_API_DX12
     DX12Renderer::Get().invalidate();
 #else
     DX11Renderer::Get().invalidate();
 #endif
 }
 
+#endif // USE_GFX_API == GFX_API_OPENGL
+
 DWORD WINAPI mainThread(LPVOID) {
     Logger_::attach().showTimeStamp();
     LOG_INFO("UnityCheeto loaded");
-    //printf("11111111");
-   // return 1;
+
     HMODULE gameAssembly = nullptr;
     while (g_running) {
         gameAssembly = GetModuleHandleA("GameAssembly.dll");
@@ -143,7 +171,15 @@ DWORD WINAPI mainThread(LPVOID) {
 
     initializeFeatures();
 
-    // Hook DXGI Present via dummy device (works for both DX11 and DX12 games)
+#if USE_GFX_API == GFX_API_OPENGL
+    auto& hook = OpenGLHook::Get();
+    hook.onSwapBuffers(onSwapBuffers);
+
+    if (!hook.initialize()) {
+        LOG_ERROR("Failed to initialize OpenGL hooks");
+        return 1;
+    }
+#else
     auto& hook = DXGIHook::Get();
     hook.onPresent(onPresent);
     hook.onResize(onResize);
@@ -152,19 +188,24 @@ DWORD WINAPI mainThread(LPVOID) {
         LOG_ERROR("Failed to initialize DXGI hooks");
         return 1;
     }
+#endif
 
     LOG_INFO("Initialization complete - press INSERT to open menu");
 
     while (g_running)
         Sleep(100);
 
-#if USE_DX12
+#if USE_GFX_API == GFX_API_OPENGL
+    OpenGLRenderer::Get().shutdown();
+    OpenGLHook::Get().shutdown();
+#elif USE_GFX_API == GFX_API_DX12
     DX12Renderer::Get().shutdown();
     DX12Hook::Get().shutdown();
+    DXGIHook::Get().shutdown();
 #else
     DX11Renderer::Get().shutdown();
-#endif
     DXGIHook::Get().shutdown();
+#endif
 
     Logger_::detach();
 

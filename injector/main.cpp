@@ -6,8 +6,8 @@
 // ============================================================================
 // Configuration — change these for your target
 // ============================================================================
-
-constexpr const wchar_t* TARGET_PROCESS = L"preternatural.exe";
+//preternatural
+constexpr const wchar_t* TARGET_PROCESS = L"GrabTaffy.exe";
 constexpr const wchar_t* DLL_FILE       = L"UnityCheeto.dll";
 constexpr DWORD POLL_INTERVAL_MS        = 100;
 

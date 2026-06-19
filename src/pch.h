@@ -1,19 +1,27 @@
 #pragma once
 
-// Graphics API switch: set to 1 for DX12, 0 for DX11
-#define USE_DX12 0
+// Graphics API selector
+#define GFX_API_DX12    0
+#define GFX_API_DX11    1
+#define GFX_API_OPENGL  2
+
+#define USE_GFX_API GFX_API_DX11
 
 #include <Windows.h>
 
-#if USE_DX12
+#if USE_GFX_API == GFX_API_DX12
 #include <d3d12.h>
 #include <dxgi1_4.h>
-#else
-#include <d3d11.h>
-#include <dxgi.h>
-#endif
 #include <d3dcompiler.h>
 #include <wrl/client.h>
+#elif USE_GFX_API == GFX_API_DX11
+#include <d3d11.h>
+#include <dxgi.h>
+#include <d3dcompiler.h>
+#include <wrl/client.h>
+#elif USE_GFX_API == GFX_API_OPENGL
+#include <wrl/client.h>
+#endif
 
 #include <algorithm>
 #include <array>

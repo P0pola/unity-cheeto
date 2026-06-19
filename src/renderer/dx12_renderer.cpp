@@ -1,6 +1,6 @@
 #include "pch.h"
 
-#if USE_DX12
+#if USE_GFX_API == GFX_API_DX12
 #include "renderer/dx12_renderer.h"
 #include "renderer/imgui_style.h"
 #include "gui/gui_manager.h"
@@ -235,4 +235,4 @@ LRESULT CALLBACK DX12Renderer::wndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARA
     return CallWindowProcW(self.originalWndProc_, hwnd, msg, wParam, lParam);
 }
 
-#endif // USE_DX12
+#endif // USE_GFX_API == GFX_API_DX12

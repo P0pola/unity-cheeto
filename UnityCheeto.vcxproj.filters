@@ -79,9 +79,20 @@
     <ClCompile Include="external\imgui\imgui_demo.cpp" />
     <ClCompile Include="external\imgui\backends\imgui_impl_dx12.cpp" />
     <ClCompile Include="external\imgui\backends\imgui_impl_win32.cpp" />
-    <ClCompile Include="src\core\hooks\dx11_hook.cpp" />
-    <ClCompile Include="src\renderer\dx11_renderer.cpp" />
+    <ClCompile Include="src\core\hooks\dx11_hook.cpp">
+      <Filter>src\core\hooks</Filter>
+    </ClCompile>
+    <ClCompile Include="src\core\hooks\opengl_hook.cpp">
+      <Filter>src\core\hooks</Filter>
+    </ClCompile>
+    <ClCompile Include="src\renderer\dx11_renderer.cpp">
+      <Filter>src\renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="src\renderer\opengl_renderer.cpp">
+      <Filter>src\renderer</Filter>
+    </ClCompile>
     <ClCompile Include="external\imgui\backends\imgui_impl_dx11.cpp" />
+    <ClCompile Include="external\imgui\backends\imgui_impl_opengl3.cpp" />
     <ClCompile Include="src\features\world_speed.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -142,8 +153,18 @@
     <ClInclude Include="src\gui\icons.h" />
     <ClInclude Include="src\core\unity\unity_macros.h" />
     <ClInclude Include="src\core\unity\unity_types.h" />
-    <ClInclude Include="src\core\hooks\dx11_hook.h" />
-    <ClInclude Include="src\renderer\dx11_renderer.h" />
+    <ClInclude Include="src\core\hooks\dx11_hook.h">
+      <Filter>src\core\hooks</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\hooks\opengl_hook.h">
+      <Filter>src\core\hooks</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\dx11_renderer.h">
+      <Filter>src\renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="src\renderer\opengl_renderer.h">
+      <Filter>src\renderer</Filter>
+    </ClInclude>
     <ClInclude Include="src\features\world_speed.h" />
   </ItemGroup>
 </Project>

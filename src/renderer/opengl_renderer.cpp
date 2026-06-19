@@ -1,33 +1,22 @@
 #include "pch.h"
 
-#if USE_GFX_API == GFX_API_DX11
-#include "renderer/dx11_renderer.h"
+#if USE_GFX_API == GFX_API_OPENGL
+#include "renderer/opengl_renderer.h"
 #include "renderer/imgui_style.h"
 #include "gui/gui_manager.h"
 #include "gui/remixicon.hpp"
 #include "gui/LXGWWenKai-Regular.hpp"
 
 #include <imgui_impl_win32.h>
-#include <imgui_impl_dx11.h>
+#include <imgui_impl_opengl3.h>
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
-bool DX11Renderer::initialize(IDXGISwapChain* swapChain) {
+bool OpenGLRenderer::initialize(HDC hdc) {
     if (initialized_) return true;
 
-    swapChain_ = swapChain;
-
-    if (FAILED(swapChain->GetDevice(__uuidof(ID3D11Device), reinterpret_cast<void**>(device_.GetAddressOf()))))
-        return false;
-
-    device_->GetImmediateContext(context_.GetAddressOf());
-
-    DXGI_SWAP_CHAIN_DESC desc{};
-    swapChain->GetDesc(&desc);
-    hwnd_ = desc.OutputWindow;
-
-    if (!createRenderTarget())
-        return false;
+    hwnd_ = WindowFromDC(hdc);
+    if (!hwnd_) return false;
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -37,7 +26,6 @@ bool DX11Renderer::initialize(IDXGISwapChain* swapChain) {
 
     ApplyMacStyle();
 
-    // Load LXGWWenKai as primary font with full Chinese range
     ImFontConfig fontCfg;
     fontCfg.OversampleH = 2;
     fontCfg.OversampleV = 1;
@@ -57,37 +45,20 @@ bool DX11Renderer::initialize(IDXGISwapChain* swapChain) {
         remixicon_compressed_data, remixicon_compressed_size,
         16.0f, &iconCfg, iconRange);
 
-    ImGui_ImplWin32_Init(hwnd_);
-    ImGui_ImplDX11_Init(device_.Get(), context_.Get());
+    ImGui_ImplWin32_InitForOpenGL(hwnd_);
+    ImGui_ImplOpenGL3_Init();
 
     originalWndProc_ = reinterpret_cast<WNDPROC>(SetWindowLongPtrW(hwnd_, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(&wndProc)));
 
     initialized_ = true;
-    LOG_INFO("DX11 Renderer initialized");
+    LOG_INFO("OpenGL Renderer initialized");
     return true;
 }
 
-bool DX11Renderer::createRenderTarget() {
-    ComPtr<ID3D11Texture2D> backBuffer;
-    if (FAILED(swapChain_->GetBuffer(0, IID_PPV_ARGS(&backBuffer))))
-        return false;
-    if (FAILED(device_->CreateRenderTargetView(backBuffer.Get(), nullptr, rtv_.GetAddressOf())))
-        return false;
-    return true;
-}
-
-void DX11Renderer::destroyRenderTarget() {
-    rtv_.Reset();
-}
-
-void DX11Renderer::render() {
+void OpenGLRenderer::render() {
     if (!initialized_) return;
 
-    if (!rtv_) {
-        if (!createRenderTarget()) return;
-    }
-
-    ImGui_ImplDX11_NewFrame();
+    ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplWin32_NewFrame();
     ImGui::NewFrame();
 
@@ -95,35 +66,27 @@ void DX11Renderer::render() {
 
     ImGui::EndFrame();
     ImGui::Render();
-
-    context_->OMSetRenderTargets(1, rtv_.GetAddressOf(), nullptr);
-    ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
-void DX11Renderer::invalidate() {
-    if (!initialized_) return;
-    destroyRenderTarget();
-}
-
-void DX11Renderer::shutdown() {
+void OpenGLRenderer::shutdown() {
     if (!initialized_) return;
 
-    ImGui_ImplDX11_Shutdown();
+    ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplWin32_Shutdown();
     ImGui::DestroyContext();
 
     if (originalWndProc_)
         SetWindowLongPtrW(hwnd_, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(originalWndProc_));
 
-    destroyRenderTarget();
     initialized_ = false;
 }
 
-LRESULT CALLBACK DX11Renderer::wndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+LRESULT CALLBACK OpenGLRenderer::wndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     if (ImGui_ImplWin32_WndProcHandler(hwnd, msg, wParam, lParam))
         return 1;
 
-    auto& self = DX11Renderer::Get();
+    auto& self = OpenGLRenderer::Get();
     if (GuiManager::Get().isVisible()) {
         if (msg == WM_KEYDOWN || msg == WM_SYSKEYDOWN ||
             msg == WM_KEYUP || msg == WM_SYSKEYUP ||
@@ -137,4 +100,4 @@ LRESULT CALLBACK DX11Renderer::wndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARA
     return CallWindowProcW(self.originalWndProc_, hwnd, msg, wParam, lParam);
 }
 
-#endif // USE_GFX_API == GFX_API_DX11
+#endif // USE_GFX_API == GFX_API_OPENGL
