@@ -78,7 +78,9 @@ void FreeCamera::onTick() {
 
 void FreeCamera::drawUI() {
     if (Widgets::Section("free_camera", TR("Free Camera"))) {
-        Widgets::Toggle(TR("Enable##cam"), enabled_);
+        bool en = isEnabled();
+        if (Widgets::Toggle(TR("Enable##cam"), &en))
+            setEnabled(en);
 
         if (isEnabled()) {
             ImGui::Spacing();

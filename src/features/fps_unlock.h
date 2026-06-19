@@ -5,8 +5,8 @@ class FPSUnlock : public FeatureBase {
 public:
     static FPSUnlock& Get() { static FPSUnlock inst; return inst; }
 
-    void onEnable() override;
-    void onDisable() override;
+    //void onEnable() override;
+    //void onDisable() override;
     void onTick() override;
     void drawUI() override;
 

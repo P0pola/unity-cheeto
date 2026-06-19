@@ -2,11 +2,11 @@
 #include "features/world_speed.h"
 
 void WorldSpeed::onEnable() {
-    LOG_INFO("World Speed enabled (scale: {:.2f})", static_cast<float>(speed));
+    //LOG_INFO("World Speed enabled (scale: {:.2f})", static_cast<float>(speed));
 }
 
 void WorldSpeed::onDisable() {
-    LOG_INFO("World Speed disabled, restoring 1.0");
+   // LOG_INFO("World Speed disabled, restoring 1.0");
     UTime::set_timeScale(1.0f);
 }
 
@@ -17,7 +17,9 @@ void WorldSpeed::onTick() {
 
 void WorldSpeed::drawUI() {
     if (Widgets::Section("world_speed", TR("World Speed"))) {
-        Widgets::Toggle(TR("Enable##worldspeed"), enabled_);
+        bool en = isEnabled();
+        if (Widgets::Toggle(TR("Enable##worldspeed"), &en))
+            setEnabled(en);
 
         if (isEnabled()) {
             ImGui::Spacing();

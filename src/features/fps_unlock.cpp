@@ -1,14 +1,14 @@
 #include "pch.h"
 #include "features/fps_unlock.h"
 
-void FPSUnlock::onEnable() {
-    LOG_INFO("FPS Unlock enabled (target: {})", static_cast<int>(targetFPS));
-}
-
-void FPSUnlock::onDisable() {
-    LOG_INFO("FPS Unlock disabled, restoring default");
-    UApplication::set_targetFrameRate(60);
-}
+//void FPSUnlock::onEnable() {
+//    LOG_INFO("FPS Unlock enabled (target: {})", static_cast<int>(targetFPS));
+//}
+//
+//void FPSUnlock::onDisable() {
+//    LOG_INFO("FPS Unlock disabled, restoring default");
+//    UApplication::set_targetFrameRate(60);
+//}
 
 void FPSUnlock::onTick() {
     if (!isEnabled()) return;
@@ -20,7 +20,9 @@ void FPSUnlock::onTick() {
 
 void FPSUnlock::drawUI() {
     if (Widgets::Section("fps_unlock", TR("FPS Unlock"))) {
-        Widgets::Toggle(TR("Enable##fps"), enabled_);
+        bool en = isEnabled();
+        if (Widgets::Toggle(TR("Enable##fps"), &en))
+            setEnabled(en);
 
         if (isEnabled()) {
             ImGui::Spacing();
