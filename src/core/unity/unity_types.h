@@ -67,32 +67,44 @@ class UScreen {
     UMETHOD(int, get_width)
     UMETHOD(int, get_height)
 };
+// ---------------------------------------------------------------------------
+// IL2CPP Array (byte[])
+// ---------------------------------------------------------------------------
+
 struct Il2CppArray {
     void* klass;
     void* monitor;
     void* bounds;
     size_t max_length;
-    uint8_t data[1]; // flexible array
+    uint8_t data[1];
 };
+
+// ---------------------------------------------------------------------------
+// System.Reflection.Assembly (mscorlib)
+// ---------------------------------------------------------------------------
+
+class UAssembly {
+    UCLASS("mscorlib.dll", "Assembly")
+    UMETHOD(void*, Load, Il2CppArray*)
+};
+
+// ---------------------------------------------------------------------------
+// HybridCLR.RuntimeApi
+// ---------------------------------------------------------------------------
 
 class URuntimeApi {
     UCLASS("HybridCLR.Runtime.dll", "RuntimeApi")
+    UMETHOD(int, LoadMetadataForAOTAssembly, Il2CppArray*, int)
+    UMETHOD(void, HotfixAssembly, void*, Il2CppArray*, void*)
+    UMETHOD(int, LoadDifferentialHybridAssemblyWithDHAOImpl, Il2CppArray*, Il2CppArray*, Il2CppArray*)
+    UMETHOD(int, LoadDifferentialHybridAssemblyWithMetaVersionImpl, Il2CppArray*, Il2CppArray*, Il2CppArray*, Il2CppArray*)
+};
 
-        // public static LoadImageErrorCode LoadMetadataForAOTAssembly(byte[] dllBytes, HomologousImageMode mode)
-        UMETHOD(int, LoadMetadataForAOTAssembly, Il2CppArray*, int)
+// ---------------------------------------------------------------------------
+// ScriptsStart (game-specific)
+// ---------------------------------------------------------------------------
 
-        // private static void HotfixAssembly(Assembly targetAssembly, byte[] hotfixAssemblyBytes, int[] hotfixMethodTokens)
-        UMETHOD(void, HotfixAssembly, void*, Il2CppArray*, void*)
-
-        // public static LoadImageErrorCode LoadDifferentialHybridAssemblyWithDHAO(byte[] currentDllBytes, byte[] dllSymbolBytes, byte[] dhaoBytes)
-        UMETHOD(int, LoadDifferentialHybridAssemblyWithDHAO, Il2CppArray*, Il2CppArray*, Il2CppArray*)
-
-        // private static LoadImageErrorCode LoadDifferentialHybridAssemblyWithDHAOImpl(byte[] dllBytes, byte[] dllSymbolBytes, byte[] dhaoBytes)
-        UMETHOD(int, LoadDifferentialHybridAssemblyWithDHAOImpl, Il2CppArray*, Il2CppArray*, Il2CppArray*)
-
-        // public static LoadImageErrorCode LoadDifferentialHybridAssemblyWithMetaVersion(byte[] currentDllBytes, byte[] currentDllSymbolBytes, byte[] originalMetaVersionFileBytes, byte[] currentMetaVersionFileBytes)
-        UMETHOD(int, LoadDifferentialHybridAssemblyWithMetaVersion, Il2CppArray*, Il2CppArray*, Il2CppArray*, Il2CppArray*)
-
-        // private static LoadImageErrorCode LoadDifferentialHybridAssemblyWithMetaVersionImpl(...)
-        UMETHOD(int, LoadDifferentialHybridAssemblyWithMetaVersionImpl, Il2CppArray*, Il2CppArray*, Il2CppArray*, Il2CppArray*)
+class UScriptsStart {
+    UCLASS("ScritpsStart.dll", "ScriptsStart")
+    UMETHOD(void, LoadDll, void*, void*)
 };
