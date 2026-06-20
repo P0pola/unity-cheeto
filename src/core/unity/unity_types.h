@@ -67,3 +67,32 @@ class UScreen {
     UMETHOD(int, get_width)
     UMETHOD(int, get_height)
 };
+struct Il2CppArray {
+    void* klass;
+    void* monitor;
+    void* bounds;
+    size_t max_length;
+    uint8_t data[1]; // flexible array
+};
+
+class URuntimeApi {
+    UCLASS("HybridCLR.Runtime.dll", "RuntimeApi")
+
+        // public static LoadImageErrorCode LoadMetadataForAOTAssembly(byte[] dllBytes, HomologousImageMode mode)
+        UMETHOD(int, LoadMetadataForAOTAssembly, Il2CppArray*, int)
+
+        // private static void HotfixAssembly(Assembly targetAssembly, byte[] hotfixAssemblyBytes, int[] hotfixMethodTokens)
+        UMETHOD(void, HotfixAssembly, void*, Il2CppArray*, void*)
+
+        // public static LoadImageErrorCode LoadDifferentialHybridAssemblyWithDHAO(byte[] currentDllBytes, byte[] dllSymbolBytes, byte[] dhaoBytes)
+        UMETHOD(int, LoadDifferentialHybridAssemblyWithDHAO, Il2CppArray*, Il2CppArray*, Il2CppArray*)
+
+        // private static LoadImageErrorCode LoadDifferentialHybridAssemblyWithDHAOImpl(byte[] dllBytes, byte[] dllSymbolBytes, byte[] dhaoBytes)
+        UMETHOD(int, LoadDifferentialHybridAssemblyWithDHAOImpl, Il2CppArray*, Il2CppArray*, Il2CppArray*)
+
+        // public static LoadImageErrorCode LoadDifferentialHybridAssemblyWithMetaVersion(byte[] currentDllBytes, byte[] currentDllSymbolBytes, byte[] originalMetaVersionFileBytes, byte[] currentMetaVersionFileBytes)
+        UMETHOD(int, LoadDifferentialHybridAssemblyWithMetaVersion, Il2CppArray*, Il2CppArray*, Il2CppArray*, Il2CppArray*)
+
+        // private static LoadImageErrorCode LoadDifferentialHybridAssemblyWithMetaVersionImpl(...)
+        UMETHOD(int, LoadDifferentialHybridAssemblyWithMetaVersionImpl, Il2CppArray*, Il2CppArray*, Il2CppArray*, Il2CppArray*)
+};

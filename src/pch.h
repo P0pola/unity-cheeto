@@ -6,7 +6,7 @@
 #define GFX_API_OPENGL  2
 
 //select your API here
-#define USE_GFX_API GFX_API_DX11
+#define USE_GFX_API GFX_API_OPENGL
 
 #include <Windows.h>
 
