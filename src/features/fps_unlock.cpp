@@ -15,7 +15,7 @@ void FPSUnlock::onTick() {
 
     int target = static_cast<int>(targetFPS);
     UApplication::set_targetFrameRate(target);
-    UQualitySettings::set_vSyncCount(0);
+   // UQualitySettings::set_vSyncCount(0);
 }
 
 void FPSUnlock::drawUI() {

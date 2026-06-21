@@ -5,7 +5,12 @@
       "WebSearch",
       "Bash(grep -E \"\\\\.\\(sln|vcxproj|md|txt|rules\\)$\")",
       "Bash(grep -E \"\\\\.\\(h|cpp\\)$\")",
-      "Bash(grep -v \"^\\\\s*//.*\\\\.dat\")"
+      "Bash(grep -v \"^\\\\s*//.*\\\\.dat\")",
+      "Bash(cat CMakeLists.txt)",
+      "Bash(cat Makefile)",
+      "Bash(ls *.sln)",
+      "Bash(ls *.vcxproj)",
+      "Bash(awk '/^[[:space:]]*public class SGComponent/,/^[[:space:]]*public \\(override string ToString|string ToString\\)/ {print NR\": \"$0}' \"E:/git/UnityCheeto/c#/Assembly-CSharp.cs\")"
     ]
   }
 }

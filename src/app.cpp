@@ -8,12 +8,14 @@
 #include "features/free_camera.h"
 #include "features/world_speed.h"
 #include "features/unity_dumper.h"
+#include "features/esp.h"
 
 // Force singleton construction → auto-register into FeatureBase::registry()
 static auto& _fps = FPSUnlock::Get();
 static auto& _cam = FreeCamera::Get();
 static auto& _spd = WorldSpeed::Get();
 static auto& _dll = UnityDumper::Get();
+static auto& _esp = ESP::Get();
 
 static ConfigVar<int> g_toggleKey{"menu.toggleKey", VK_INSERT};
 
@@ -72,6 +74,15 @@ void initialize() {
 
         if (ImGui::Button("Clear Log"))
             Logger_::clear();
+
+        if (ImGui::Button("Dump Assemblies")) {
+            LOG_INFO("=== Loaded Assemblies ({}) ===", UnityResolve::assembly.size());
+            for (const auto* a : UnityResolve::assembly) {
+                LOG_INFO("  [{}] file={}", a->name, a->file);
+            }
+            LOG_INFO("=== End Assemblies ===");
+        }
+
         FeatureBase::drawCategory("Debug");
     });
 }

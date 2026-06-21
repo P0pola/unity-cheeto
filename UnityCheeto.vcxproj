@@ -97,6 +97,7 @@
     <ClCompile Include="src\gui\widgets.cpp" />
     <ClCompile Include="src\features\fps_unlock.cpp" />
     <ClCompile Include="src\features\free_camera.cpp" />
+    <ClCompile Include="src\features\esp.cpp" />
     <!-- ImGui sources -->
     <ClCompile Include="external\imgui\imgui.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
@@ -162,6 +163,7 @@
     <ClInclude Include="src\features\feature_base.h" />
     <ClInclude Include="src\features\fps_unlock.h" />
     <ClInclude Include="src\features\free_camera.h" />
+    <ClInclude Include="src\features\esp.h" />
     <ClInclude Include="vendor\HookManager\HookManager.h" />
     <ClInclude Include="vendor\Config\ConfigManager.h" />
     <ClInclude Include="vendor\Config\ConfigVar.h" />

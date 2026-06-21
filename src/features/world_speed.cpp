@@ -2,13 +2,13 @@
 #include "features/world_speed.h"
 
 void WorldSpeed::init() {
-    UTime::set_timeScale_hook([](float value) {
+   // UTime::set_timeScale_hook([](float value) {
         //auto& ws = WorldSpeed::Get();
         //if (ws.isEnabled())
         //    value = static_cast<float>(ws.speed);
        // LOG_DEBUG("Test hook");
-        UTime::set_timeScale_original(value);
-        });
+    //    UTime::set_timeScale_original(value);
+    //    });
 }
 
 

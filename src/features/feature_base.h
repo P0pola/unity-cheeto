@@ -10,6 +10,7 @@ public:
     virtual void onEnable() {}
     virtual void onDisable() {}
     virtual void onTick() {}
+    virtual void drawOverlay() {}
     virtual void drawUI() {}
     virtual const char* name() const = 0;
     virtual const char* category() const = 0;
@@ -29,6 +30,10 @@ public:
 
     static void tickAll() {
         for (auto* f : registry()) f->onTick();
+    }
+
+    static void overlayAll() {
+        for (auto* f : registry()) f->drawOverlay();
     }
 
     static void drawCategory(const char* cat) {

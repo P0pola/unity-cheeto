@@ -67,6 +67,63 @@ class UScreen {
     UMETHOD(int, get_width)
     UMETHOD(int, get_height)
 };
+
+// ---------------------------------------------------------------------------
+// SGEngine.Common.Runtime.dll — Singleton<T>
+// ---------------------------------------------------------------------------
+
+// SGEngine.Core.Singleton<T> has a static field "m_Instance"
+// Access via: ObjectManager class → USTATIC_FIELD
+
+// ---------------------------------------------------------------------------
+// Assembly-CSharp.dll — SGEngine game types
+// ---------------------------------------------------------------------------
+
+class SGObject {
+    UCLASS("Assembly-CSharp.dll", "SGObject")
+    UMETHOD(Vector3, GetPosition, void*)
+    UMETHOD(void, GetPositionXYZ, void*, float*, float*, float*)
+    UMETHOD(float, GetHeight, void*)
+    UMETHOD(float, GetRadius, void*)
+    UMETHOD(bool, IsValid, void*)
+    UMETHOD(bool, IsActive, void*)
+
+    UPROPERTY(long long, ObjectID, "m_ObjectID")
+    UPROPERTY(void*, Transform, "m_Transform")
+    UPROPERTY(Vector3, Position, "m_Position")
+    UPROPERTY(bool, IsDestroyed, "m_IsDestroyed")
+    UPROPERTY(float, Height, "m_Height")
+    UPROPERTY(float, Radius, "m_Radius")
+};
+
+class ObjectManager {
+    UCLASS("Assembly-CSharp.dll", "ObjectManager")
+    UMETHOD(void, Update, void*)
+    UMETHOD(void*, GetObjectMap, void*)
+    UMETHOD(void*, GetObjectListByType, void*, int)
+    UMETHOD(void*, GetObject, void*, long long)
+
+    UPROPERTY(void*, Hero, "m_Hero")
+    UPROPERTY(void*, ObjectMap, "m_ObjectMap")
+    UPROPERTY(void*, ObjectTypeMap, "m_ObjectTypeMap")
+
+
+};
+
+class CameraUtility {
+    UCLASS("Assembly-CSharp.dll", "CameraUtility")
+    UMETHOD(void, CameraWorldToScreenPoint, float, float, float, float*, float*, float*)
+};
+
+// ObjectType enum values
+namespace ObjectType {
+    constexpr int Hero = 8;
+    constexpr int Player = 128;
+    constexpr int Monster = 256;
+    constexpr int Npc = 512;
+    constexpr int Pet = 1024;
+    constexpr int Puppet = 131072;
+}
 // ---------------------------------------------------------------------------
 // IL2CPP Array (byte[])
 // ---------------------------------------------------------------------------
@@ -77,6 +134,15 @@ struct Il2CppArray {
     void* bounds;
     size_t max_length;
     uint8_t data[1];
+};
+
+// ---------------------------------------------------------------------------
+// System.Object (mscorlib) — for ToString
+// ---------------------------------------------------------------------------
+
+class UObject {
+    UCLASS("mscorlib.dll", "Object")
+    UMETHOD(UString*, ToString, void*)
 };
 
 // ---------------------------------------------------------------------------

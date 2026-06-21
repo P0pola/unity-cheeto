@@ -3,6 +3,7 @@
 #if USE_GFX_API == GFX_API_OPENGL
 #include "renderer/opengl_renderer.h"
 #include "renderer/imgui_style.h"
+#include "features/feature_base.h"
 #include "gui/gui_manager.h"
 #include "gui/remixicon.hpp"
 #include "gui/LXGWWenKai-Regular.hpp"
@@ -75,6 +76,7 @@ void OpenGLRenderer::render() {
     ImGui_ImplWin32_NewFrame();
     ImGui::NewFrame();
 
+    FeatureBase::overlayAll();
     GuiManager::Get().render();
 
     ImGui::EndFrame();
