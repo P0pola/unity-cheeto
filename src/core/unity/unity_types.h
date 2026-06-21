@@ -99,12 +99,3 @@ class URuntimeApi {
     UMETHOD(int, LoadDifferentialHybridAssemblyWithDHAOImpl, Il2CppArray*, Il2CppArray*, Il2CppArray*)
     UMETHOD(int, LoadDifferentialHybridAssemblyWithMetaVersionImpl, Il2CppArray*, Il2CppArray*, Il2CppArray*, Il2CppArray*)
 };
-
-// ---------------------------------------------------------------------------
-// ScriptsStart (game-specific)
-// ---------------------------------------------------------------------------
-
-class UScriptsStart {
-    UCLASS("ScritpsStart.dll", "ScriptsStart")
-    UMETHOD(void, LoadDll, void*, void*)
-};

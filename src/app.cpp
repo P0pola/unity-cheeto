@@ -7,13 +7,13 @@
 #include "features/fps_unlock.h"
 #include "features/free_camera.h"
 #include "features/world_speed.h"
-#include "features/dll_dumper.h"
+#include "features/unity_dumper.h"
 
 // Force singleton construction → auto-register into FeatureBase::registry()
 static auto& _fps = FPSUnlock::Get();
 static auto& _cam = FreeCamera::Get();
 static auto& _spd = WorldSpeed::Get();
-static auto& _dll = DllDumper::Get();
+static auto& _dll = UnityDumper::Get();
 
 static ConfigVar<int> g_toggleKey{"menu.toggleKey", VK_INSERT};
 

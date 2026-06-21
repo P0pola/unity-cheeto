@@ -4,7 +4,8 @@
       "Bash(git submodule *)",
       "WebSearch",
       "Bash(grep -E \"\\\\.\\(sln|vcxproj|md|txt|rules\\)$\")",
-      "Bash(grep -E \"\\\\.\\(h|cpp\\)$\")"
+      "Bash(grep -E \"\\\\.\\(h|cpp\\)$\")",
+      "Bash(grep -v \"^\\\\s*//.*\\\\.dat\")"
     ]
   }
 }

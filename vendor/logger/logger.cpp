@@ -30,12 +30,16 @@ void Logger_::attachConsole() {
 #ifdef _WIN32
     if (!m_consoleAttached) {
         AllocConsole();
-
-        m_hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
         SetConsoleOutputCP(CP_UTF8);
 
+        // Use CreateFileW to get a direct handle to the console output buffer.
+        // This is immune to stdout redirection and game hooks on GetStdHandle.
+        m_hConsole = CreateFileW(L"CONOUT$", GENERIC_READ | GENERIC_WRITE,
+                                 FILE_SHARE_WRITE, nullptr, OPEN_EXISTING,
+                                 0, nullptr);
+
         DWORD dwMode = 0;
-        if (GetConsoleMode(m_hConsole, &dwMode)) {
+        if (m_hConsole != INVALID_HANDLE_VALUE && GetConsoleMode(m_hConsole, &dwMode)) {
             dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
             SetConsoleMode(m_hConsole, dwMode);
         }
@@ -54,7 +58,10 @@ void Logger_::attachConsole() {
 void Logger_::detachConsole() {
 #ifdef _WIN32
     if (m_consoleAttached) {
-        m_hConsole = INVALID_HANDLE_VALUE;
+        if (m_hConsole != INVALID_HANDLE_VALUE) {
+            CloseHandle(m_hConsole);
+            m_hConsole = INVALID_HANDLE_VALUE;
+        }
         FreeConsole();
         m_consoleAttached = false;
     }

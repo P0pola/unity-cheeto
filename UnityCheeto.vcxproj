@@ -79,7 +79,7 @@
   </ItemDefinitionGroup>
   <!-- Source files -->
   <ItemGroup>
-    <ClCompile Include="src\features\dll_dumper.cpp" />
+    <ClCompile Include="src\features\unity_dumper.cpp" />
     <ClCompile Include="src\features\world_speed.cpp" />
     <ClCompile Include="src\pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
@@ -144,7 +144,7 @@
     <ClInclude Include="src\app.h" />
     <ClInclude Include="src\core\unity\unity_macros.h" />
     <ClInclude Include="src\core\unity\unity_types.h" />
-    <ClInclude Include="src\features\dll_dumper.h" />
+    <ClInclude Include="src\features\unity_dumper.h" />
     <ClInclude Include="src\features\world_speed.h" />
     <ClInclude Include="src\gui\icons.h" />
     <ClInclude Include="src\gui\remixicon.hpp" />
