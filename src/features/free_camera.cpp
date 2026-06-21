@@ -18,7 +18,7 @@ void FreeCamera::onTick() {
     if (!isEnabled()) return;
 
     if (!cameraObj_) {
-        cameraObj_ = UCamera::get_main();
+        cameraObj_ = UCamera::get_current();
         if (!cameraObj_) return;
     }
 

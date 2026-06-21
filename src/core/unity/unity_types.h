@@ -5,6 +5,7 @@
 // ============================================================================
 
 using Vector3 = UnityResolve::UnityType::Vector3;
+using Quaternion = UnityResolve::UnityType::Quaternion;
 using UString = UnityResolve::UnityType::String;
 
 // ---------------------------------------------------------------------------
@@ -33,7 +34,8 @@ class UTime {
 
 class UCamera {
     UCLASS("UnityEngine.CoreModule.dll", "Camera")
-    UMETHOD(void*, get_main)
+        UMETHOD(void*, get_main)
+    UMETHOD(void*, get_current)
     UMETHOD(float, get_fieldOfView, void*)
     UMETHOD(void, set_fieldOfView, void*, float)
 };
@@ -54,10 +56,15 @@ class UTransform {
     UMETHOD(void, set_localPosition_Injected, void*, Vector3*)
     UMETHOD(void, get_localScale_Injected, void*, Vector3*)
     UMETHOD(void, set_localScale_Injected, void*, Vector3*)
+    UMETHOD(void, get_rotation_Injected, void*, Quaternion*)
+        UMETHOD(Vector3, get_forward, void*)
+        UMETHOD(Vector3, get_right, void*)
+
 };
 
 class UGameObject {
     UCLASS("UnityEngine.CoreModule.dll", "GameObject")
+    UMETHOD(void*, get_transform, void*)
     UMETHOD(void, SetActive, void*, bool)
     UMETHOD(bool, get_activeSelf, void*)
 };
@@ -81,8 +88,14 @@ class UScreen {
 
 class SGObject {
     UCLASS("Assembly-CSharp.dll", "SGObject")
+
     UMETHOD(Vector3, GetPosition, void*)
     UMETHOD(void, GetPositionXYZ, void*, float*, float*, float*)
+    UMETHOD(void, SetPositionXYZ, void*, float, float, float, bool)
+    UMETHOD(Vector3, GetForward, void*)
+    UMETHOD(Vector3, GetRight, void*)
+
+
     UMETHOD(float, GetHeight, void*)
     UMETHOD(float, GetRadius, void*)
     UMETHOD(bool, IsValid, void*)
@@ -113,6 +126,16 @@ class ObjectManager {
 class CameraUtility {
     UCLASS("Assembly-CSharp.dll", "CameraUtility")
     UMETHOD(void, CameraWorldToScreenPoint, float, float, float, float*, float*, float*)
+};
+
+class SGPlayer {
+    UCLASS("Assembly-CSharp.dll", "SGPlayer")
+    UMETHOD(void, SetCharacterControllerEnable, void*, bool)
+};
+
+class SGHero {
+    UCLASS("Assembly-CSharp.dll", "SGHero")
+    UMETHOD(void, Update, void*)
 };
 
 // ObjectType enum values

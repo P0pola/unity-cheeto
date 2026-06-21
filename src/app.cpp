@@ -9,6 +9,7 @@
 #include "features/world_speed.h"
 #include "features/unity_dumper.h"
 #include "features/esp.h"
+#include "features/noclip.h"
 
 // Force singleton construction → auto-register into FeatureBase::registry()
 static auto& _fps = FPSUnlock::Get();
@@ -16,6 +17,7 @@ static auto& _cam = FreeCamera::Get();
 static auto& _spd = WorldSpeed::Get();
 static auto& _dll = UnityDumper::Get();
 static auto& _esp = ESP::Get();
+static auto& _noclip = Noclip::Get();
 
 static ConfigVar<int> g_toggleKey{"menu.toggleKey", VK_INSERT};
 

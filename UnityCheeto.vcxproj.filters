@@ -98,6 +98,8 @@
     <ClCompile Include="external\imgui\backends\imgui_impl_opengl3.cpp" />
     <ClCompile Include="src\features\world_speed.cpp" />
     <ClCompile Include="src\features\unity_dumper.cpp" />
+    <ClCompile Include="src\features\esp.cpp" />
+    <ClCompile Include="src\features\noclip.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\pch.h">
@@ -174,5 +176,7 @@
     </ClInclude>
     <ClInclude Include="src\features\world_speed.h" />
     <ClInclude Include="src\features\unity_dumper.h" />
+    <ClInclude Include="src\features\esp.h" />
+    <ClInclude Include="src\features\noclip.h" />
   </ItemGroup>
 </Project>
