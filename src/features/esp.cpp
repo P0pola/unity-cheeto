@@ -14,20 +14,16 @@ static void hkObjectManagerUpdate(void* self) {
     ObjectManager::Update_original(self);
 }
 
-void ESP::init() {
-    LOG_INFO("[ESP] init start");
-
+bool ESP::init() {
     auto* klass = ObjectManager::uclass();
-    if (!klass) {
-        LOG_ERROR("[ESP] ObjectManager class not found");
-        return;
-    }
+    if (!klass) return false;
 
-    if (ObjectManager::Update_hook(hkObjectManagerUpdate)) {
-        LOG_INFO("[ESP] ObjectManager::Update hooked");
-    } else {
+    if (!ObjectManager::Update_hook(hkObjectManagerUpdate)) {
         LOG_ERROR("[ESP] Failed to hook ObjectManager::Update");
+        return false;
     }
+    LOG_INFO("[ESP] ObjectManager::Update hooked");
+    return true;
 }
 
 void ESP::updateCache() {

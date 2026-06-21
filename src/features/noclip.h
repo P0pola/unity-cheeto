@@ -5,7 +5,7 @@ class Noclip : public FeatureBase {
 public:
     static Noclip& Get() { static Noclip inst; return inst; }
 
-    void init() override;
+    bool init() override;
     void onEnable() override;
     void onDisable() override;
     void onTick() override;

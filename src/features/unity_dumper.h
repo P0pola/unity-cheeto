@@ -4,7 +4,7 @@
 class UnityDumper : public FeatureBase {
 public:
     static UnityDumper& Get() { static UnityDumper inst; return inst; }
-    void init() override;
+    bool init() override;
     void onTick() override;
     void drawUI() override;
 

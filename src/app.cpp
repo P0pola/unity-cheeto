@@ -10,8 +10,10 @@
 #include "features/unity_dumper.h"
 #include "features/esp.h"
 #include "features/noclip.h"
+#include "features/lua_dumper.h"
 
 // Force singleton construction → auto-register into FeatureBase::registry()
+//static auto& _lua = LuaDumper::Get();
 static auto& _fps = FPSUnlock::Get();
 static auto& _cam = FreeCamera::Get();
 static auto& _spd = WorldSpeed::Get();

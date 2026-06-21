@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "features/world_speed.h"
 
-void WorldSpeed::init() {
+bool WorldSpeed::init() {
    // UTime::set_timeScale_hook([](float value) {
         //auto& ws = WorldSpeed::Get();
         //if (ws.isEnabled())
@@ -9,6 +9,7 @@ void WorldSpeed::init() {
        // LOG_DEBUG("Test hook");
     //    UTime::set_timeScale_original(value);
     //    });
+    return true;
 }
 
 

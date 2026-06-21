@@ -4,7 +4,7 @@
 class WorldSpeed : public FeatureBase {
 public:
     static WorldSpeed& Get() { static WorldSpeed inst; return inst; }
-    void init() override;
+    bool init() override;
     void onEnable() override;
     void onDisable() override;
     void onTick() override;

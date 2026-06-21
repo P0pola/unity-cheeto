@@ -11,28 +11,19 @@ static void hkSGHeroUpdate(void* self) {
     SGHero::Update_original(self);
 }
 
-void Noclip::init() {
-    LOG_INFO("[Noclip] init start");
-
+bool Noclip::init() {
     auto* klass = SGHero::uclass();
-    if (!klass) {
-        LOG_ERROR("[Noclip] SGHero class not found");
-        return;
-    }
-   // LOG_INFO("[Noclip] SGHero class resolved: {}", klass->name);
+    if (!klass) return false;
 
     auto* addr = SGHero::Update_address();
-    if (!addr) {
-        LOG_ERROR("[Noclip] SGHero::Update address not found");
-        return;
-    }
-    LOG_INFO("[Noclip] SGHero::Update address: {:p}", addr);
+    if (!addr) return false;
 
-    if (SGHero::Update_hook(hkSGHeroUpdate)) {
-        LOG_INFO("[Noclip] SGHero::Update hooked OK");
-    } else {
+    if (!SGHero::Update_hook(hkSGHeroUpdate)) {
         LOG_ERROR("[Noclip] Failed to hook SGHero::Update");
+        return false;
     }
+    LOG_INFO("[Noclip] SGHero::Update hooked at {:p}", addr);
+    return true;
 }
 
 void Noclip::onEnable() {

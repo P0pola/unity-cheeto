@@ -4,6 +4,12 @@
 #include <fstream>
 #include <Windows.h>
 
+static std::filesystem::path getExeDir() {
+    char buf[MAX_PATH]{};
+    GetModuleFileNameA(nullptr, buf, MAX_PATH);
+    return std::filesystem::path(buf).parent_path();
+}
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -265,7 +271,7 @@ static size_t calcMetadataSize(const uint8_t* base, size_t maxSize) {
 }
 
 void UnityDumper::dumpGlobalMetadata() {
-    std::string dir = static_cast<std::string>(outputDir);
+    std::string dir = (getExeDir() / static_cast<std::string>(outputDir)).string();
 
     SYSTEM_INFO si;
     GetSystemInfo(&si);
@@ -321,7 +327,7 @@ void UnityDumper::dumpGlobalMetadata() {
 // ---------------------------------------------------------------------------
 
 void UnityDumper::scanAndDumpDlls() {
-    std::string dir = static_cast<std::string>(outputDir) + "/dlls";
+    std::string dir = (getExeDir() / static_cast<std::string>(outputDir) / "dlls").string();
     ensureOutputDir(dir);
 
     SYSTEM_INFO si;
@@ -381,7 +387,8 @@ void UnityDumper::scanAndDumpDlls() {
 // Init & UI
 // ---------------------------------------------------------------------------
 
-void UnityDumper::init() {
+bool UnityDumper::init() {
+    return true;
 }
 
 void UnityDumper::onTick() {}

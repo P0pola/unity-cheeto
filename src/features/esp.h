@@ -8,7 +8,7 @@ class ESP : public FeatureBase {
 public:
     static ESP& Get() { static ESP inst; return inst; }
 
-    void init() override;
+    bool init() override;
     void drawOverlay() override;
     void drawUI() override;
 

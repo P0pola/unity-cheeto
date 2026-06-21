@@ -188,3 +188,21 @@ class URuntimeApi {
     UMETHOD(int, LoadDifferentialHybridAssemblyWithDHAOImpl, Il2CppArray*, Il2CppArray*, Il2CppArray*)
     UMETHOD(int, LoadDifferentialHybridAssemblyWithMetaVersionImpl, Il2CppArray*, Il2CppArray*, Il2CppArray*, Il2CppArray*)
 };
+
+// ---------------------------------------------------------------------------
+// ToLuaDLLAssembly.dll — LuaDLL
+// ---------------------------------------------------------------------------
+
+class LuaDLL {
+    UCLASS("ToLuaDLLAssembly.dll", "LuaDLL")
+    UMETHOD(int, luaL_loadbuffer, void*, Il2CppArray*, int, void*)
+    UMETHOD(void*, lua_tostring, void*, int)
+    UMETHOD(int, lua_gettop, void*)
+};
+
+class LuaManager {
+
+    UCLASS("Assembly-CSharp.dll", "LuaManager")
+    UMETHOD(void, DoString, void*, UString*)
+    UMETHOD(void, Update, void*)
+};

@@ -2,11 +2,12 @@
 #include <string>
 #include <vector>
 #include <cstring>
+#include <chrono>
 
 class FeatureBase {
 public:
     virtual ~FeatureBase() = default;
-    virtual void init() {}
+    virtual bool init() { return true; }
     virtual void onEnable() {}
     virtual void onDisable() {}
     virtual void onTick() {}
@@ -20,15 +21,44 @@ public:
         return r;
     }
 
+    static std::vector<FeatureBase*>& pendingInit() {
+        static std::vector<FeatureBase*> p;
+        return p;
+    }
+
     static void initAll() {
         LOG_INFO("Loading {} features:", registry().size());
         for (auto* f : registry()) {
             LOG_INFO("  [{}] category={}", f->name(), f->category());
-            f->init();
+            if (!f->init()) {
+                pendingInit().push_back(f);
+            }
+        }
+        if (!pendingInit().empty()) {
+            LOG_INFO("{} features pending (waiting for assemblies)", pendingInit().size());
+        }
+    }
+
+    static void retryPending() {
+        if (pendingInit().empty()) return;
+        static auto lastRetry = std::chrono::steady_clock::now();
+        auto now = std::chrono::steady_clock::now();
+        if (now - lastRetry < std::chrono::seconds(3)) return;
+        lastRetry = now;
+
+        auto& pending = pendingInit();
+        for (auto it = pending.begin(); it != pending.end();) {
+            if ((*it)->init()) {
+                LOG_INFO("[{}] late-init OK", (*it)->name());
+                it = pending.erase(it);
+            } else {
+                ++it;
+            }
         }
     }
 
     static void tickAll() {
+        retryPending();
         for (auto* f : registry()) f->onTick();
     }
 
