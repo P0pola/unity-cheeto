@@ -166,7 +166,7 @@ private: \
             }(); \
             return ptr; \
         } \
-        static inline fn_t original_ptr = nullptr; \
+        static inline std::unordered_map<void*, fn_t> detour_originals; \
     }; \
 public: \
     template<typename... Args> \
@@ -188,15 +188,25 @@ public: \
         bool ok = HookManager::install( \
             reinterpret_cast<typename METHOD_NAME##_t::fn_t>(addr), detour); \
         if (ok) { \
-            METHOD_NAME##_t::original_ptr = \
+            METHOD_NAME##_t::detour_originals[reinterpret_cast<void*>(detour)] = \
                 HookManager::getInstance().getOriginal(detour); \
         } \
         return ok; \
     } \
     template<typename... Args> \
+    __declspec(noinline) \
     static RETURN_TYPE METHOD_NAME##_original(Args&&... args) { \
-        if (METHOD_NAME##_t::original_ptr) \
-            return METHOD_NAME##_t::original_ptr(std::forward<Args>(args)...); \
+        void* retAddr = _ReturnAddress(); \
+        typename METHOD_NAME##_t::fn_t best_original = nullptr; \
+        void* best_detour = nullptr; \
+        for (auto& [detour, orig] : METHOD_NAME##_t::detour_originals) { \
+            if (detour <= retAddr && (best_detour == nullptr || detour > best_detour)) { \
+                best_detour = detour; \
+                best_original = orig; \
+            } \
+        } \
+        if (best_original) \
+            return best_original(std::forward<Args>(args)...); \
         if constexpr (!std::is_void_v<RETURN_TYPE>) { RETURN_TYPE _{}; return _; } \
     }
 

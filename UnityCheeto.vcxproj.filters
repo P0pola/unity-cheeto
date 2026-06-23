@@ -101,6 +101,7 @@
     <ClCompile Include="src\features\esp.cpp" />
     <ClCompile Include="src\features\noclip.cpp" />
     <ClCompile Include="src\features\lua_dumper.cpp" />
+    <ClCompile Include="src\features\lua_executor.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\pch.h">
@@ -180,5 +181,6 @@
     <ClInclude Include="src\features\esp.h" />
     <ClInclude Include="src\features\noclip.h" />
     <ClInclude Include="src\features\lua_dumper.h" />
+    <ClInclude Include="src\features\lua_executor.h" />
   </ItemGroup>
 </Project>

@@ -90,4 +90,4 @@ void LuaDumper::drawUI() {
     }
 }
 
-static auto& _luadumper = LuaDumper::Get();
+

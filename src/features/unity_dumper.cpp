@@ -415,5 +415,4 @@ void UnityDumper::drawUI() {
     }
 }
 
-// ---------------------------------------------------------------------------
-static auto& _unitydumper = UnityDumper::Get();
+

@@ -80,6 +80,12 @@
   <!-- Source files -->
   <ItemGroup>
     <ClCompile Include="src\features\lua_dumper.cpp" />
+    <ClCompile Include="src\features\damage_mult.cpp" />
+    <ClCompile Include="src\features\attack_speed.cpp" />
+    <ClCompile Include="src\features\mob_vacuum.cpp" />
+    <ClCompile Include="src\features\quest_teleport.cpp" />
+    <ClCompile Include="src\features\god_mode.cpp" />
+    <ClCompile Include="src\features\lua_executor.cpp" />
     <ClCompile Include="src\features\noclip.cpp" />
     <ClCompile Include="src\features\unity_dumper.cpp" />
     <ClCompile Include="src\features\world_speed.cpp" />
@@ -148,6 +154,12 @@
     <ClInclude Include="src\core\unity\unity_macros.h" />
     <ClInclude Include="src\core\unity\unity_types.h" />
     <ClInclude Include="src\features\lua_dumper.h" />
+    <ClInclude Include="src\features\damage_mult.h" />
+    <ClInclude Include="src\features\attack_speed.h" />
+    <ClInclude Include="src\features\mob_vacuum.h" />
+    <ClInclude Include="src\features\quest_teleport.h" />
+    <ClInclude Include="src\features\god_mode.h" />
+    <ClInclude Include="src\features\lua_executor.h" />
     <ClInclude Include="src\features\noclip.h" />
     <ClInclude Include="src\features\unity_dumper.h" />
     <ClInclude Include="src\features\world_speed.h" />
