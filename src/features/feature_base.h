@@ -73,18 +73,53 @@ public:
     }
 
     void setEnabled(bool v) {
-        if (v == static_cast<bool>(enabled_)) return;
-        enabled_ = v;
+        if (v == isEnabled()) return;
+        setEnabledInternal(v);
         v ? onEnable() : onDisable();
     }
-    bool isEnabled() const { return enabled_; }
-    bool& enabledRef() { return enabled_.GetRef(); }
+    
+    bool isEnabled() const { 
+        return bPersistEnabled_ ? static_cast<bool>(*enabled_) : enabledRuntime_;
+    }
+    
+    bool& enabledRef() { 
+        return bPersistEnabled_ ? enabled_->GetRef() : enabledRuntime_;
+    }
 
 protected:
-    FeatureBase(const std::string& configKey, bool defaultEnabled = false)
-        : enabled_(configKey + ".enabled", defaultEnabled) {
+    // 默认构造：使用 ConfigVar 持久化到 config
+    // bPersistEnabled=false 时使用纯运行时状态，不保存
+    //
+    // 示例：
+    //   FeatureBase("key")              // 持久化（默认）
+    //   FeatureBase("key", true)        // 持久化，初始启用
+    //   FeatureBase("key", false, false) // 纯运行时，不持久化
+    FeatureBase(const std::string& configKey, bool bDefaultEnabled = false, bool bPersistEnabled = true)
+        : bPersistEnabled_(bPersistEnabled),
+          enabledRuntime_(bDefaultEnabled),
+          enabled_(nullptr) {
+        if (bPersistEnabled_) {
+            enabled_ = new ConfigVar<bool>(configKey + ".enabled", bDefaultEnabled);
+        }
         registry().push_back(this);
     }
 
-    ConfigVar<bool> enabled_;
+    virtual ~FeatureBase() {
+        if (bPersistEnabled_ && enabled_) {
+            delete enabled_;
+        }
+    }
+
+private:
+    void setEnabledInternal(bool v) {
+        if (bPersistEnabled_) {
+            **enabled_ = v;
+        } else {
+            enabledRuntime_ = v;
+        }
+    }
+
+    bool bPersistEnabled_ = false;          // 是否持久化到 config
+    bool enabledRuntime_ = false;           // 仅当 bPersistEnabled_=false 时使用
+    ConfigVar<bool>* enabled_ = nullptr;    // 仅当 bPersistEnabled_=true 时使用
 };
